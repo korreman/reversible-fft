@@ -1,0 +1,92 @@
+% documentclass options:
+% a4paper | letterpaper | ...  - paper size
+% 10pt | 11pt | 12pt           - font size
+% onecolumn | twocolumn        - toggle two columns
+% titlepage | notitlepage      - toggle title page
+% oneside | twoside            - toggle styling for two-side printing
+% landscape                    - create landscape document instead
+% draft                        - indicate formatting issues
+% fleqn                        - left-align formulas
+% leqno                        - put formula numbering on the left hand side instead of right
+\documentclass[12pt, a4paper, notitlepage, oneside]{article}
+\usepackage[margin=2cm]{geometry} % set page margins
+\usepackage[utf8]{inputenc}
+
+% line spacing. confusingly, use 1.3 for one-and-a-half, and 1.6 for double spacing
+\linespread{1.0}
+
+% replace paragraph indent with vertical spacing
+\usepackage{parskip}
+%\setlength{\parindent}{15pt} % reinstate paragraph indent
+
+% Use \reindent at the start of a paragraph to indent it instead
+\newcommand{\reindent}[1]{{\setlength{\parindent}{15pt}\setlength{\parskip}{0pt}#1}}
+
+\usepackage{xcolor} % colors
+\usepackage{graphicx}
+\usepackage{hyperref} % URLs
+
+%%% math tools and symbols %%%
+\usepackage{xfrac}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\usepackage{mathtools}
+%\mathtoolsset{showonlyrefs} % only label equations that are referenced
+
+\usepackage{listings}
+\lstdefinestyle{typewriter}{
+    showspaces=false,
+    showstringspaces=false,
+    basicstyle=\normalsize\ttfamily,
+    breaklines=true,
+    keepspaces=true
+}
+\lstset{style=typewriter}
+
+%%%%% Project-specific settings %%%%%
+%%%%% End project-specific settings %%%%%
+
+% change paragraph
+\begin{document}
+    % control the depth for showing section numbering and including in the table of contents
+    %  5: subparagraph
+    %  4: paragraph
+    %  3: subsubsection
+    %  2: subsection
+    %  1: section
+    %  0: chapter
+    % -1: part
+    % for example, set secnumdepth 0 to remove numbers from an entire article
+    \setcounter{secnumdepth}{3}
+    \setcounter{tocdepth}{3}
+
+    % change document-wide paragraph alignment
+    %\raggedright % Left justified
+    %\raggedleft  % Right justified
+    %\centering   % Center
+
+    %\frenchspacing % remove extra spacing after periods
+    \nonfrenchspacing
+
+    \title{Reversible Integer FFT \\ \textit{PAT Project 2022}}
+    \author{Troels Korreman Nielsen (xck773)}
+    \date{\today}
+    \maketitle
+    %\begin{abstract}
+    %    \input{abstract}
+    %\end{abstract}
+    \tableofcontents
+    %\listoffigures
+    %\listoftables
+    \newpage
+
+    %%%%% \input or \include statements go here %%%%%
+    \input{fourier}
+    \input{fft}
+    \input{intfft}
+    \input{impl}
+
+    % use bibtex for references
+    \bibliography{bibliography}
+\end{document}
