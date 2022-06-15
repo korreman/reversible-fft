@@ -1,8 +1,45 @@
 \section{Reversible Integer Approximation}
 
+From a theoretical perspective,
+the Fourier Transform is straightforwardly reversible:
+\begin{equation}
+    g(k) = \int_{-\infty}^{\infty} \hat g(x) \cdot e^{2 \pi i k n / N} dx
+\end{equation}
+
+% TODO: Get into orthogonal matrices and complex conjugates.
+
+Similarly, the inverse DFT (IDFT) can be defined as:
+\begin{equation}
+    x(n) = \sum_{k = 0}^{N - 1} X(n) \cdot e^{2 \pi i kn / N}
+\end{equation}
+This can factorized with the exact same methods used for the forward transform.
+
+We know that FFT doesn't inherently destroy any information.
+While this may be the case,
+there are several challenges to using this invertibility in practice.
+
+The first issue is resolution.
+FFT performs many additions and multiplications between the real components of complex numbers.
+We use fixed-point integer representations,
+so non-destructive additions add 1 bit of information
+while multiplications can potentially double the amount of bits.
+We wish to reduce the increase in resolution necessary to preserve all information.
+
+The second issue is the simultaneous cross-updates
+necessary for both complex multiplications and the FFT lattice.
+These are theoretically reversible,
+but we wish to develop a directly reversible algorithm.
+
 \subsection{Lifting steps}
 
 \subsection{Complex multiplication}
 
 \subsection{Reversible convolution} % TODO: is 'convolution' the right word?
 
+% TODO: Mention that the paper doesn't actually try to make directly reversible convolution
+
+\begin{lstlisting}
+x -= y
+y <<= 1
+y += x
+\end{lstlisting}

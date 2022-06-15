@@ -1,18 +1,56 @@
 \section{Fast Fourier Transform}
 
+The time cost complexity of naively computing the DFT of a signal is $O(N^2)$.
+Luckily, by exploiting certain inherent properties of the transform,
+we can reduce this to $O(N \log N)$ while greatly reducing the needed number of multiplications.
+
+\subsection{Twiddle factor}
+
+To simplify the representation and computation of the DFT,
+we define the following constant:
+
+\begin{equation}
+    W_N = e^{-2 \pi i / N}
+\end{equation}
+
+This is often referred to as the \textit{twiddle factor}.
+When the parameter $N$ isn't specified,
+it should be inferred contextually.
+
+Using this, we can then rephrase the DFT as:
+\begin{equation}
+    X(k) = \sum_{n = 0}^{N - 1} W_N^{kn}~~,~~k \in [0; N - 1]
+\end{equation}
+
 \subsection{Periodicity and symmetry}
+
+Two properties of the twiddle factor are used in order to minimize the amount of operations
+and develop an $O(n \log n)$ algorithm for computing the DFT.
+In order to understand these,
+we must take a closer look at the twiddle factor and what it actually means.
+
+We can express this succinctly by:
+\begin{equation}
+    W_N^{k} = W_N^{k \mod N}
+\end{equation}
+
+From this we get two different properties.
+The first, periodicity, is essential to achieving an $O(n \log n)$ time complexity.
+
+\begin{equation}
+    W^k_N = W^{k + N}_N
+\end{equation}
+
+The second property, symmetry,
+will allow us to further reduce the amount of necessary multiplications.
 
 \begin{equation}
     W^{k + N/2}_N = -W^k_N
 \end{equation}
 
-\begin{equation}
-    W^{k + N}_N = W^k_N
-\end{equation}
-
 \subsection{Factorization(s)}
 
-\subsubsection{Cooley and Tukey}
+\subsubsection{Cooley-tukey}
 
 \subsubsection{Split-radix}
 
