@@ -19,12 +19,12 @@ it should be inferred contextually.
 
 Using this, we can then rephrase the DFT as:
 \begin{equation}
-    X(k) = \sum_{n = 0}^{N - 1} W_N^{kn}~~,~~k \in [0; N - 1]
+    X(k) = \sum_{n = 0}^{N - 1} W_N^{nk} x(n)~~,~~k \in [0; N)
 \end{equation}
 
 \subsection{Periodicity and symmetry}
 
-Two properties of the twiddle factor are used in order to minimize the amount of operations
+Some properties of the twiddle factor are exploited in order to minimize the amount of operations
 and develop an $O(n \log n)$ algorithm for computing the DFT.
 In order to understand these,
 we must take a closer look at the twiddle factor and what it actually means.
@@ -48,9 +48,51 @@ will allow us to further reduce the amount of necessary multiplications.
     W^{k + N/2}_N = -W^k_N
 \end{equation}
 
-\subsection{Factorization(s)}
+A third property can be exploited to define FFT as a fully recursive algorithm:
 
-\subsubsection{Cooley-tukey}
+\begin{equation}
+    W_N^{ck} = W_{N/c}^{k}
+\end{equation}
 
-\subsubsection{Split-radix}
+\subsection{Factorization}
 
+There are numerous different ways in which the DFT sum can be factorized.
+They all have the same $O(N \log N)$ time complexity,
+but differ in how many operations are concretely performed.
+In the interest of simplicity,
+we choose a factorization that is easy to understand rather than an efficient one.
+% TODO: Does this factorization have a name?
+
+%Recalling the third property of the twiddle factor,
+We can split the sum that defines the DFT into two sums of even and odd inputs:
+\begin{align}
+    X(k) &= \sum_{n = 0}^{N - 1} W_N^{nk} x(n) \\
+    &= \sum_{n = 0}^{N/2 - 1} W_N^{2nk} x(2n) + \sum_{n = 0}^{N/2 - 1} W_N^{(2n + 1)k} x(2n + 1) \\
+    &= \sum_{n = 0}^{N/2 - 1} W_N^{2nk} x(2n) + W_N^k \sum_{n = 0}^{N/2 - 1} W_N^{2nk} x(2n + 1) %\\
+    %&= \sum_{n = 0}^{N/2 - 1} W_{N/2}^{nk} x(2n) + W_N^k \sum_{n = 0}^{N/2 - 1} W_{N/2}^{nk} x(2n + 1)
+\end{align}
+Let's define those even and odd inputs as lists:
+\begin{align}
+    x_\textit{even} &= \langle x_{2n} ~|~ 0 \leq n < N/2 \rangle\\
+    x_\textit{odd}  &= \langle x_{2n + 1} ~|~ 0 \leq n < N/2 \rangle
+\end{align}
+The DFTs of these two lists are almost equivalent to the DFT of $x$.
+Recall the third property property of the twiddle factor:
+\begin{align}
+    X_\textit{even}(k) &= \sum_{n = 0}^{N/2 - 1} W_{N/2}^{nk} x_\textit{even}(n) = \sum_{n = 0}^{N/2 - 1} W_{N}^{2nk} x(2n) \\
+    X_\textit{odd}(k) &= \sum_{n = 0}^{N/2 - 1} W_{N/2}^{nk} x_\textit{odd}(n) = \sum_{n = 0}^{N/2 - 1} W_{N}^{2nk} x(2n + 1)
+\end{align}
+We can define the DFT of $x$ through the DFT of the even/odd lists:
+\begin{equation}
+    X(k) = X_\textit{even}(k) + W_N^k X_\textit{odd}(k) ~,~ k \in [0;N/2)
+\end{equation}
+There is one problem, however,
+as the DFTs of the splits are only defined for $k \in [0;N/2)$.
+
+\begin{equation}
+    X(k) =
+    \begin{cases}
+        X_\textit{even}(k) + W_N^k X_\textit{odd}(k) &\text{if}~k < N\\
+        X_\textit{even}(N - k) - W_N^{k'} X_\textit{odd}(k') &\text{if}~k \geq N ~\text{where}~k' = k - N/2
+    \end{cases}
+\end{equation}
