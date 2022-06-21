@@ -1,15 +1,17 @@
 \section{The Fourier Transform}
+The Fourier transform is a transform
+that decomposes a function in the space/time domain to one in the frequency domain. %TODO: Domain?
+As a practical example, it can be used to obtain a histogram of pitches from a sound signal.
 
 \begin{equation}
      \hat g(k) = \int_{-\infty}^{\infty} g(x) \cdot e^{-2 \pi i k x} dx
 \end{equation}
 
 \begin{equation}
-     \hat g(k) = \int_{x_1}^{x_2} g(x) \cdot e^{-2 \pi i k x} dx \cdot (t_2 - t_1)
+     \hat g(k) = \int_{t_1}^{t_2} g(x) \cdot e^{-2 \pi i k x} dx \cdot (t_2 - t_1)
 \end{equation}
 
 \subsection{Discrete Fourier Transform}
-
 \begin{equation}
     X(k) = \sum_{n = 0}^{N - 1} x(n) \cdot e^{-2 \pi i kn / N} ~,~ k \in [0; N)
 \end{equation}

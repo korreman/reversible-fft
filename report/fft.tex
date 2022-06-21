@@ -1,58 +1,36 @@
 \section{Fast Fourier Transform}
 
-The time cost complexity of naively computing the DFT of a signal is $O(N^2)$.
-Luckily, by exploiting certain inherent properties of the transform,
-we can reduce this to $O(N \log N)$ while greatly reducing the needed number of multiplications.
+The cost of naively computing the DFT of an input is $O(N^2)$.
+Luckily, by exploiting certain inherent redundancies in the computation,
+we can shrink this to $O(N \log N)$.
 
 \subsection{Twiddle factor}
 
 To simplify the representation and computation of the DFT,
-we define the following constant:
+we define what is often referred to as the \textit{twiddle factor}:
 
 \begin{equation}
     W_N = e^{-2 \pi i / N}
 \end{equation}
-
-This is often referred to as the \textit{twiddle factor}.
-When the parameter $N$ isn't specified,
-it should be inferred contextually.
 
 Using this, we can then rephrase the DFT as:
 \begin{equation}
     X(k) = \sum_{n = 0}^{N - 1} W_N^{nk} x(n)~~,~~k \in [0; N)
 \end{equation}
 
-\subsection{Periodicity and symmetry}
+The twiddle factor essentially defines a rotation of a number relative to zero in the complex plane.
+By multiplying a number $x$ by $W_N$, it is rotated by $1/N$'th of a full rotation.
+By extension, $W_N^{k}$ corresponds to $k/N$'ths of a full rotation.
+%TODO: Figure
 
-Some properties of the twiddle factor are exploited in order to minimize the amount of operations
-and develop an $O(n \log n)$ algorithm for computing the DFT.
-In order to understand these,
-we must take a closer look at the twiddle factor and what it actually means.
-
-We can express this succinctly by:
-\begin{equation}
-    W_N^{k} = W_N^{k \mod N}
-\end{equation}
-
-From this we get two different properties.
-The first, periodicity, is essential to achieving an $O(n \log n)$ time complexity.
-
-\begin{equation}
-    W^k_N = W^{k + N}_N
-\end{equation}
-
-The second property, symmetry,
-will allow us to further reduce the amount of necessary multiplications.
-
-\begin{equation}
-    W^{k + N/2}_N = -W^k_N
-\end{equation}
-
-A third property can be exploited to define FFT as a fully recursive algorithm:
-
-\begin{equation}
-    W_N^{ck} = W_{N/c}^{k}
-\end{equation}
+$W_N^k$ itself just traverses the unit circle in the complex plane,
+making a full rotation for every $N$ added to $k$.
+This results in some inherent properties which we can exploit:
+\begin{align}
+    \textbf{Periodicity:} &~~W^k_N = W^{k + N}_N\\
+    \textbf{Symmetry:}    &~~W^{k + N/2}_N = -W^k_N\\
+    \textbf{Granularity:} &~~W_N^{ck} = W_{N/c}^{k}
+\end{align}
 
 \subsection{Factorization}
 
@@ -60,39 +38,54 @@ There are numerous different ways in which the DFT sum can be factorized.
 They all have the same $O(N \log N)$ time complexity,
 but differ in how many operations are concretely performed.
 In the interest of simplicity,
-we choose a factorization that is easy to understand rather than an efficient one.
+we choose a factorization that is easy to understand rather than the most efficient one.
 % TODO: Does this factorization have a name?
 
-%Recalling the third property of the twiddle factor,
 We can split the sum that defines the DFT into two sums of even and odd inputs:
 \begin{align}
     X(k) &= \sum_{n = 0}^{N - 1} W_N^{nk} x(n) \\
     &= \sum_{n = 0}^{N/2 - 1} W_N^{2nk} x(2n) + \sum_{n = 0}^{N/2 - 1} W_N^{(2n + 1)k} x(2n + 1) \\
     &= \sum_{n = 0}^{N/2 - 1} W_N^{2nk} x(2n) + W_N^k \sum_{n = 0}^{N/2 - 1} W_N^{2nk} x(2n + 1) %\\
-    %&= \sum_{n = 0}^{N/2 - 1} W_{N/2}^{nk} x(2n) + W_N^k \sum_{n = 0}^{N/2 - 1} W_{N/2}^{nk} x(2n + 1)
 \end{align}
-Let's define those even and odd inputs as lists:
+Let's define the even and odd inputs as lists:
 \begin{align}
     x_\textit{even} &= \langle x_{2n} ~|~ 0 \leq n < N/2 \rangle\\
     x_\textit{odd}  &= \langle x_{2n + 1} ~|~ 0 \leq n < N/2 \rangle
 \end{align}
-The DFTs of these two lists are almost equivalent to the DFT of $x$.
-Recall the third property property of the twiddle factor:
+Recalling the granularity property of the twiddle factor,
+we can see that the DFT of these lists match the two sums that we just split $X(k)$ into:
 \begin{align}
     X_\textit{even}(k) &= \sum_{n = 0}^{N/2 - 1} W_{N/2}^{nk} x_\textit{even}(n) = \sum_{n = 0}^{N/2 - 1} W_{N}^{2nk} x(2n) \\
     X_\textit{odd}(k) &= \sum_{n = 0}^{N/2 - 1} W_{N/2}^{nk} x_\textit{odd}(n) = \sum_{n = 0}^{N/2 - 1} W_{N}^{2nk} x(2n + 1)
 \end{align}
-We can define the DFT of $x$ through the DFT of the even/odd lists:
+We can then substitute to define $X(k)$ through those DFTs instead:
 \begin{equation}
     X(k) = X_\textit{even}(k) + W_N^k X_\textit{odd}(k) ~,~ k \in [0;N/2)
 \end{equation}
-There is one problem, however,
-as the DFTs of the splits are only defined for $k \in [0;N/2)$.
+This only allows us to define $X(k)$ for $k \in [0;N/2)$ however.
+To get the rest, we exploit the periodicity of the twiddle factor.
+Since $W_{N/2}^{k + N/2} = W_{N/2}^k$, we also have $X_\textit{even}(k + N/2) = X_\textit{even}(k)$.
+Thus we can wrap around for $k \in [N/2;N)$ and use $k' = k - N/2$ in the stead of $k$.
 
+For the upper values of $k$, we can save more work.
+From the symmetry property we get $W_N^k = W_N^{k' + N/2} = -W_N^{k'}$.
+This gives us the final formulation of our factorization:
 \begin{equation}
     X(k) =
     \begin{cases}
-        X_\textit{even}(k) + W_N^k X_\textit{odd}(k) &\text{if}~k < N\\
-        X_\textit{even}(N - k) - W_N^{k'} X_\textit{odd}(k') &\text{if}~k \geq N ~\text{where}~k' = k - N/2
+        X_\textit{even}(k) + W_N^k X_\textit{odd}(k) &\text{if}~k < N \\
+        X_\textit{even}(k') - W_N^{k'} X_\textit{odd}(k') &\text{if}~k \geq N ~\text{where}~k' = k - N/2
     \end{cases}
+\end{equation}
+
+\subsubsection{Complexity}
+
+Computing $X(k)$ from $X_\textit{even}(k)$ and $X_\textit{odd}(k)$
+only requires a constant amount of work.
+Doing this for all $k \in [0;N)$ takes $O(N)$ time.
+Additionally, we can recursively compute the DFT of $x_\textit{even}$ and $x_\textit{odd}$
+using the same strategy.
+We can thus prove the complexity bound with a recursive formula:
+\begin{equation}
+    T(N) = O(N) + 2T(N/2) = O(N \log N)
 \end{equation}
