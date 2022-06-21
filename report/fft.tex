@@ -18,6 +18,14 @@ Using this, we can then rephrase the DFT as:
     X(k) = \sum_{n = 0}^{N - 1} W_N^{nk} x(n)~~,~~k \in [0; N)
 \end{equation}
 
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+
+    \end{tikzpicture}
+    \caption{The twiddle factor in the complex plane.\label{fig:twid}}
+\end{figure}
+
 The twiddle factor essentially defines a rotation of a number relative to zero in the complex plane.
 By multiplying a number $x$ by $W_N$, it is rotated by $1/N$'th of a full rotation.
 By extension, $W_N^{k}$ corresponds to $k/N$'ths of a full rotation.
