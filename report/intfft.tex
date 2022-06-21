@@ -210,8 +210,8 @@ but we wish to implement them as directly reversible operations.
         ]
         \node (x) [dot, label=left:$x$] at (0,2){};
         \node (y) [dot, label=left:$y$] at (0,0){};
-        \node (xp) [dot, label=right:$x'$] at (4.8,2){};
-        \node (yp) [dot, label=right:$y'$] at (4.8,0){};
+        \node (yp) [dot, label=right:$y'$] at (4.8,2){};
+        \node (xp) [dot, label=right:$x'$] at (4.8,0){};
 
         \node (a) [op] at (1.2,0){a};
         \node (t) [op] at (2.4,0){2};
@@ -219,12 +219,12 @@ but we wish to implement them as directly reversible operations.
         \node (p) [op] at (3.6,0){+};
 
         \path[arr] (x) -- (m);
-        \path[arr] (m) -- (xp);
+        \path[arr] (m) -- (yp);
         \path[arr] (y) -- (a);
         \path[arr] (a) -- (m);
         \path[arr] (a) -- (t);
         \path[arr] (t) -- (p);
-        \path[arr] (p) -- (yp);
+        \path[arr] (p) -- (xp);
         \path[arr] (3.6,2) -- (p);
     \end{tikzpicture}
     \caption{Lifting steps for convolution.\label{fig:convb}}
