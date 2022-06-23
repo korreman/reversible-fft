@@ -50,6 +50,40 @@ procedure convolve(int x[2], int y[2])
     call add(y, x)
     call swap(x, y)
 
+// decide the index `other` to swap element index `i` with, given the size of the input
+procedure scramble_idx(int i, int other, int log2N, int N)
+    local int j
+    from j = 0
+    loop
+        if (i & (1 << j)) != 0 then
+            other += N >> j + 1
+        fi (i & (1 << j)) != 0
+        j += 1
+    until j = log2N
+    delocal int j = log2N
+
+// perform a full even-odd scramble of `arr`, making it ready for the FFT algorithm
+procedure scramble(int arr[], int log2N)
+    local int N = 2 ** log2N
+    local int i
+    from i = 0
+    loop
+        local int other
+        call scramble_idx(i, other, log2N, N)
+        local int tmp
+        if i < other then
+            arr[i] <=> tmp
+            arr[other] <=> tmp
+            arr[i] <=> tmp
+        fi i < other
+        delocal int tmp
+        uncall scramble_idx(i, other, log2N, N)
+        delocal int other
+        i += 1
+    until i = N
+    delocal int i = N
+    delocal int N = 2 ** log2N
+
 // multiplies `x` by `a`
 // `a` is not a direct representation of a complex number, instead:
 // `a[0] = -(a_r - 1)/a_i`
@@ -138,29 +172,23 @@ procedure step(
     int twiddle_bits
 )
     local int N = 2 ** layer
-    local int halfwidth = N / 2
     local int num_sections = 2 ** (log2N - layer)
-    local int section
 
+    local int section
     from section = 0
     loop
         local int section_offset = section * N
-        local int odd_offset = section_offset + halfwidth
-
         call mul_coefficients(
             reals,
             imags,
             twiddle_m,
             twiddle_i,
             twiddle_bits,
-            odd_offset,
-            halfwidth,
+            section_offset + N / 2,
+            N / 2,
             num_sections
         )
-
         call convolve_pairs(reals, imags, section_offset, N)
-
-        delocal int odd_offset = section_offset + halfwidth
         delocal int section_offset = section * N
 
         section += 1
@@ -168,42 +196,7 @@ procedure step(
     delocal int section = num_sections
 
     delocal int num_sections = 2 ** (log2N - layer)
-    delocal int halfwidth = N / 2
     delocal int N = 2 ** layer
-
-// decide the index `other` to swap element index `i` with, given the size of the input
-procedure scramble_idx(int i, int other, int log2N, int N)
-    local int j
-    from j = 0
-    loop
-        if (i & (1 << j)) != 0 then
-            other += N >> j + 1
-        fi (i & (1 << j)) != 0
-        j += 1
-    until j = log2N
-    delocal int j = log2N
-
-// perform a full even-odd scramble of `arr`, making it ready for the FFT algorithm
-procedure scramble(int arr[], int log2N)
-    local int N = 2 ** log2N
-    local int i
-    from i = 0
-    loop
-        local int other
-        call scramble_idx(i, other, log2N, N)
-        local int tmp
-        if i < other then
-            arr[i] <=> tmp
-            arr[other] <=> tmp
-            arr[i] <=> tmp
-        fi i < other
-        delocal int tmp
-        uncall scramble_idx(i, other, log2N, N)
-        delocal int other
-        i += 1
-    until i = N
-    delocal int i = N
-    delocal int N = 2 ** log2N
 
 procedure fft (
     int log2N,
@@ -233,261 +226,262 @@ procedure main()
     int twiddle_bits = 16
 
     reals[0] += 0
-    reals[1] += 8214
-    reals[2] += 16298
-    reals[3] += 24125
-    reals[4] += 31572
-    reals[5] += 38521
-    reals[6] += 44862
-    reals[7] += 50496
-    reals[8] += 55334
-    reals[9] += 59299
-    reals[10] += 62328
-    reals[11] += 64375
-    reals[12] += 65407
-    reals[13] += 65407
-    reals[14] += 64375
-    reals[15] += 62328
-    reals[16] += 59299
-    reals[17] += 55334
-    reals[18] += 50496
-    reals[19] += 44862
-    reals[20] += 38521
-    reals[21] += 31572
-    reals[22] += 24125
-    reals[23] += 16298
-    reals[24] += 8214
-    reals[25] += 0
-    reals[26] += -8214
-    reals[27] += -16298
-    reals[28] += -24125
-    reals[29] += -31572
-    reals[30] += -38521
-    reals[31] += -44862
-    reals[32] += -50496
-    reals[33] += -55334
-    reals[34] += -59299
-    reals[35] += -62328
-    reals[36] += -64375
-    reals[37] += -65407
-    reals[38] += -65407
-    reals[39] += -64375
-    reals[40] += -62328
-    reals[41] += -59299
-    reals[42] += -55334
-    reals[43] += -50496
-    reals[44] += -44862
-    reals[45] += -38521
-    reals[46] += -31572
-    reals[47] += -24125
-    reals[48] += -16298
-    reals[49] += -8214
-    reals[50] += 0
-    reals[51] += 8214
-    reals[52] += 16298
-    reals[53] += 24125
-    reals[54] += 31572
-    reals[55] += 38521
-    reals[56] += 44862
-    reals[57] += 50496
-    reals[58] += 55334
-    reals[59] += 59299
-    reals[60] += 62328
-    reals[61] += 64375
-    reals[62] += 65407
-    reals[63] += 65407
-    reals[64] += 64375
-    reals[65] += 62328
-    reals[66] += 59299
-    reals[67] += 55334
-    reals[68] += 50496
-    reals[69] += 44862
-    reals[70] += 38521
-    reals[71] += 31572
-    reals[72] += 24125
-    reals[73] += 16298
-    reals[74] += 8214
-    reals[75] += 0
-    reals[76] += -8214
-    reals[77] += -16298
-    reals[78] += -24125
-    reals[79] += -31572
-    reals[80] += -38521
-    reals[81] += -44862
-    reals[82] += -50496
-    reals[83] += -55334
-    reals[84] += -59299
-    reals[85] += -62328
-    reals[86] += -64375
-    reals[87] += -65407
-    reals[88] += -65407
-    reals[89] += -64375
-    reals[90] += -62328
-    reals[91] += -59299
-    reals[92] += -55334
-    reals[93] += -50496
-    reals[94] += -44862
-    reals[95] += -38521
-    reals[96] += -31572
-    reals[97] += -24125
-    reals[98] += -16298
-    reals[99] += -8214
-    reals[100] += 0
-    reals[101] += 8214
-    reals[102] += 16298
-    reals[103] += 24125
-    reals[104] += 31572
-    reals[105] += 38521
-    reals[106] += 44862
-    reals[107] += 50496
-    reals[108] += 55334
-    reals[109] += 59299
-    reals[110] += 62328
-    reals[111] += 64375
-    reals[112] += 65407
-    reals[113] += 65407
-    reals[114] += 64375
-    reals[115] += 62328
-    reals[116] += 59299
-    reals[117] += 55334
-    reals[118] += 50496
-    reals[119] += 44862
-    reals[120] += 38521
-    reals[121] += 31572
-    reals[122] += 24125
-    reals[123] += 16298
-    reals[124] += 8214
-    reals[125] += 0
-    reals[126] += -8214
-    reals[127] += -16298
-    reals[128] += -24125
-    reals[129] += -31572
-    reals[130] += -38521
-    reals[131] += -44862
-    reals[132] += -50496
-    reals[133] += -55334
-    reals[134] += -59299
-    reals[135] += -62328
-    reals[136] += -64375
-    reals[137] += -65407
-    reals[138] += -65407
-    reals[139] += -64375
-    reals[140] += -62328
-    reals[141] += -59299
-    reals[142] += -55334
-    reals[143] += -50496
-    reals[144] += -44862
-    reals[145] += -38521
-    reals[146] += -31572
-    reals[147] += -24125
-    reals[148] += -16298
-    reals[149] += -8214
-    reals[150] += 0
-    reals[151] += 8214
-    reals[152] += 16298
-    reals[153] += 24125
-    reals[154] += 31572
-    reals[155] += 38521
-    reals[156] += 44862
-    reals[157] += 50496
-    reals[158] += 55334
-    reals[159] += 59299
-    reals[160] += 62328
-    reals[161] += 64375
-    reals[162] += 65407
-    reals[163] += 65407
-    reals[164] += 64375
-    reals[165] += 62328
-    reals[166] += 59299
-    reals[167] += 55334
-    reals[168] += 50496
-    reals[169] += 44862
-    reals[170] += 38521
-    reals[171] += 31572
-    reals[172] += 24125
-    reals[173] += 16298
-    reals[174] += 8214
-    reals[175] += 0
-    reals[176] += -8214
-    reals[177] += -16298
-    reals[178] += -24125
-    reals[179] += -31572
-    reals[180] += -38521
-    reals[181] += -44862
-    reals[182] += -50496
-    reals[183] += -55334
-    reals[184] += -59299
-    reals[185] += -62328
-    reals[186] += -64375
-    reals[187] += -65407
-    reals[188] += -65407
-    reals[189] += -64375
-    reals[190] += -62328
-    reals[191] += -59299
-    reals[192] += -55334
-    reals[193] += -50496
-    reals[194] += -44862
-    reals[195] += -38521
-    reals[196] += -31572
-    reals[197] += -24125
-    reals[198] += -16298
-    reals[199] += -8214
+    reals[1] += 25080
+    reals[2] += 46341
+    reals[3] += 60547
+    reals[4] += 65536
+    reals[5] += 60547
+    reals[6] += 46341
+    reals[7] += 25080
+    reals[8] += 0
+    reals[9] += -25080
+    reals[10] += -46341
+    reals[11] += -60547
+    reals[12] += -65536
+    reals[13] += -60547
+    reals[14] += -46341
+    reals[15] += -25080
+    reals[16] += 0
+    reals[17] += 25080
+    reals[18] += 46341
+    reals[19] += 60547
+    reals[20] += 65536
+    reals[21] += 60547
+    reals[22] += 46341
+    reals[23] += 25080
+    reals[24] += 0
+    reals[25] += -25080
+    reals[26] += -46341
+    reals[27] += -60547
+    reals[28] += -65536
+    reals[29] += -60547
+    reals[30] += -46341
+    reals[31] += -25080
+    reals[32] += 0
+    reals[33] += 25080
+    reals[34] += 46341
+    reals[35] += 60547
+    reals[36] += 65536
+    reals[37] += 60547
+    reals[38] += 46341
+    reals[39] += 25080
+    reals[40] += 0
+    reals[41] += -25080
+    reals[42] += -46341
+    reals[43] += -60547
+    reals[44] += -65536
+    reals[45] += -60547
+    reals[46] += -46341
+    reals[47] += -25080
+    reals[48] += 0
+    reals[49] += 25080
+    reals[50] += 46341
+    reals[51] += 60547
+    reals[52] += 65536
+    reals[53] += 60547
+    reals[54] += 46341
+    reals[55] += 25080
+    reals[56] += 0
+    reals[57] += -25080
+    reals[58] += -46341
+    reals[59] += -60547
+    reals[60] += -65536
+    reals[61] += -60547
+    reals[62] += -46341
+    reals[63] += -25080
+    reals[64] += 0
+    reals[65] += 25080
+    reals[66] += 46341
+    reals[67] += 60547
+    reals[68] += 65536
+    reals[69] += 60547
+    reals[70] += 46341
+    reals[71] += 25080
+    reals[72] += 0
+    reals[73] += -25080
+    reals[74] += -46341
+    reals[75] += -60547
+    reals[76] += -65536
+    reals[77] += -60547
+    reals[78] += -46341
+    reals[79] += -25080
+    reals[80] += 0
+    reals[81] += 25080
+    reals[82] += 46341
+    reals[83] += 60547
+    reals[84] += 65536
+    reals[85] += 60547
+    reals[86] += 46341
+    reals[87] += 25080
+    reals[88] += 0
+    reals[89] += -25080
+    reals[90] += -46341
+    reals[91] += -60547
+    reals[92] += -65536
+    reals[93] += -60547
+    reals[94] += -46341
+    reals[95] += -25080
+    reals[96] += 0
+    reals[97] += 25080
+    reals[98] += 46341
+    reals[99] += 60547
+    reals[100] += 65536
+    reals[101] += 60547
+    reals[102] += 46341
+    reals[103] += 25080
+    reals[104] += 0
+    reals[105] += -25080
+    reals[106] += -46341
+    reals[107] += -60547
+    reals[108] += -65536
+    reals[109] += -60547
+    reals[110] += -46341
+    reals[111] += -25080
+    reals[112] += 0
+    reals[113] += 25080
+    reals[114] += 46341
+    reals[115] += 60547
+    reals[116] += 65536
+    reals[117] += 60547
+    reals[118] += 46341
+    reals[119] += 25080
+    reals[120] += 0
+    reals[121] += -25080
+    reals[122] += -46341
+    reals[123] += -60547
+    reals[124] += -65536
+    reals[125] += -60547
+    reals[126] += -46341
+    reals[127] += -25080
+    reals[128] += 0
+    reals[129] += 25080
+    reals[130] += 46341
+    reals[131] += 60547
+    reals[132] += 65536
+    reals[133] += 60547
+    reals[134] += 46341
+    reals[135] += 25080
+    reals[136] += 0
+    reals[137] += -25080
+    reals[138] += -46341
+    reals[139] += -60547
+    reals[140] += -65536
+    reals[141] += -60547
+    reals[142] += -46341
+    reals[143] += -25080
+    reals[144] += 0
+    reals[145] += 25080
+    reals[146] += 46341
+    reals[147] += 60547
+    reals[148] += 65536
+    reals[149] += 60547
+    reals[150] += 46341
+    reals[151] += 25080
+    reals[152] += 0
+    reals[153] += -25080
+    reals[154] += -46341
+    reals[155] += -60547
+    reals[156] += -65536
+    reals[157] += -60547
+    reals[158] += -46341
+    reals[159] += -25080
+    reals[160] += 0
+    reals[161] += 25080
+    reals[162] += 46341
+    reals[163] += 60547
+    reals[164] += 65536
+    reals[165] += 60547
+    reals[166] += 46341
+    reals[167] += 25080
+    reals[168] += 0
+    reals[169] += -25080
+    reals[170] += -46341
+    reals[171] += -60547
+    reals[172] += -65536
+    reals[173] += -60547
+    reals[174] += -46341
+    reals[175] += -25080
+    reals[176] += 0
+    reals[177] += 25080
+    reals[178] += 46341
+    reals[179] += 60547
+    reals[180] += 65536
+    reals[181] += 60547
+    reals[182] += 46341
+    reals[183] += 25080
+    reals[184] += 0
+    reals[185] += -25080
+    reals[186] += -46341
+    reals[187] += -60547
+    reals[188] += -65536
+    reals[189] += -60547
+    reals[190] += -46341
+    reals[191] += -25080
+    reals[192] += 0
+    reals[193] += 25080
+    reals[194] += 46341
+    reals[195] += 60547
+    reals[196] += 65536
+    reals[197] += 60547
+    reals[198] += 46341
+    reals[199] += 25080
     reals[200] += 0
-    reals[201] += 8214
-    reals[202] += 16298
-    reals[203] += 24125
-    reals[204] += 31572
-    reals[205] += 38521
-    reals[206] += 44862
-    reals[207] += 50496
-    reals[208] += 55334
-    reals[209] += 59299
-    reals[210] += 62328
-    reals[211] += 64375
-    reals[212] += 65407
-    reals[213] += 65407
-    reals[214] += 64375
-    reals[215] += 62328
-    reals[216] += 59299
-    reals[217] += 55334
-    reals[218] += 50496
-    reals[219] += 44862
-    reals[220] += 38521
-    reals[221] += 31572
-    reals[222] += 24125
-    reals[223] += 16298
-    reals[224] += 8214
-    reals[225] += 0
-    reals[226] += -8214
-    reals[227] += -16298
-    reals[228] += -24125
-    reals[229] += -31572
-    reals[230] += -38521
-    reals[231] += -44862
-    reals[232] += -50496
-    reals[233] += -55334
-    reals[234] += -59299
-    reals[235] += -62328
-    reals[236] += -64375
-    reals[237] += -65407
-    reals[238] += -65407
-    reals[239] += -64375
-    reals[240] += -62328
-    reals[241] += -59299
-    reals[242] += -55334
-    reals[243] += -50496
-    reals[244] += -44862
-    reals[245] += -38521
-    reals[246] += -31572
-    reals[247] += -24125
-    reals[248] += -16298
-    reals[249] += -8214
-    reals[250] += 0
-    reals[251] += 8214
-    reals[252] += 16298
-    reals[253] += 24125
-    reals[254] += 31572
-    reals[255] += 38521
+    reals[201] += -25080
+    reals[202] += -46341
+    reals[203] += -60547
+    reals[204] += -65536
+    reals[205] += -60547
+    reals[206] += -46341
+    reals[207] += -25080
+    reals[208] += 0
+    reals[209] += 25080
+    reals[210] += 46341
+    reals[211] += 60547
+    reals[212] += 65536
+    reals[213] += 60547
+    reals[214] += 46341
+    reals[215] += 25080
+    reals[216] += 0
+    reals[217] += -25080
+    reals[218] += -46341
+    reals[219] += -60547
+    reals[220] += -65536
+    reals[221] += -60547
+    reals[222] += -46341
+    reals[223] += -25080
+    reals[224] += 0
+    reals[225] += 25080
+    reals[226] += 46341
+    reals[227] += 60547
+    reals[228] += 65536
+    reals[229] += 60547
+    reals[230] += 46341
+    reals[231] += 25080
+    reals[232] += 0
+    reals[233] += -25080
+    reals[234] += -46341
+    reals[235] += -60547
+    reals[236] += -65536
+    reals[237] += -60547
+    reals[238] += -46341
+    reals[239] += -25080
+    reals[240] += 0
+    reals[241] += 25080
+    reals[242] += 46341
+    reals[243] += 60547
+    reals[244] += 65536
+    reals[245] += 60547
+    reals[246] += 46341
+    reals[247] += 25080
+    reals[248] += 0
+    reals[249] += -25080
+    reals[250] += -46341
+    reals[251] += -60547
+    reals[252] += -65536
+    reals[253] += -60547
+    reals[254] += -46341
+    reals[255] += -25080
+
 
     // twiddle factor values
     twiddle_m[1] += 804

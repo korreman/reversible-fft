@@ -11,7 +11,7 @@
     [x] Coefficient multiplication
         [x] Edge cases
     [x] Convolution
-    [ ] Parameters given to multiplication and convolution
+    ['] Parameters given to multiplication and convolution
 
 
 [ ] Correctness of factorization
