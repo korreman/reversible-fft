@@ -9,6 +9,6 @@
 [?] Coefficient representation - current representation seems to work
 
 [ ] Step
-    [ ] Coefficient multiplication
-        [ ] Edge cases
-[ ] Step - convolution
+    [x] Coefficient multiplication
+        [x] Edge cases
+    [ ] Convolution

@@ -55,9 +55,55 @@ procedure convolve(int x[2], int y[2])
 // `a[0] = -(a_r - 1)/a_i`
 // `a[1] = a_i`
 procedure mul(int x[2], int a[2], int twiddle_bits)
-    x[0] += (-1 * a[0] * x[1]) >> twiddle_bits
-    x[1] += a[1] * x[0] >> twiddle_bits
-    x[0] += (-1 * a[0] * x[1]) >> twiddle_bits
+    x[0] -= (a[0] * x[1]) >> twiddle_bits
+    x[1] += (a[1] * x[0]) >> twiddle_bits
+    x[0] -= (a[0] * x[1]) >> twiddle_bits
+
+// multiply indices `[offset; offset + length)` by `W^(k * k_step)` for `k in [0; length)`
+procedure mul_coefficients(
+    int reals[],
+    int imags[],
+    int twiddle_m[],
+    int twiddle_i[],
+    int twiddle_bits,
+    int offset,
+    int length,
+    int k_step
+)
+    local int middle = length / 2
+    if middle > 0 then // prevent index from overrunning
+        local int idx = 1 // skip 0, as it isn't rotated
+        from idx = 1
+        loop
+            local int a[2]
+            a[0] += twiddle_m[idx * k_step]
+            a[1] += twiddle_i[idx * k_step]
+
+            local int y[2]
+            call swap_arr(y, reals, imags, idx + offset)
+            call mul(y, a, twiddle_bits)
+            call swap_arr(y, reals, imags, idx + offset)
+
+            call swap_arr(y, reals, imags, length - idx + offset)
+            call mul(y, a, twiddle_bits)
+            call flipr(y)
+            call swap_arr(y, reals, imags, length - idx + offset)
+            delocal int y[2]
+
+            a[1] -= twiddle_i[idx * k_step]
+            a[0] -= twiddle_m[idx * k_step]
+            delocal int a[2]
+            idx += 1
+        until idx = middle
+
+        local int y[2]
+        call swap_arr(y, reals, imags, idx + offset)
+        call rot90(y)
+        call swap_arr(y, reals, imags, idx + offset)
+        delocal int y[2]
+        delocal int idx = middle
+    fi middle > 0
+    delocal int middle = length / 2
 
 procedure step(
     int layer,
@@ -69,78 +115,58 @@ procedure step(
     int twiddle_bits
 )
     local int N = 2 ** layer
+    local int halfwidth = N / 2
     local int num_sections = 2 ** (log2N - layer)
     local int section
 
     from section = 0
     loop
         local int section_offset = section * N
-        local int odd_offset = section_offset + N/2
-        local int j = 0
+        local int odd_offset = section_offset + halfwidth
 
-        // multiply odd indexes by W^k coefficients
-        from j = 0
-        loop
-            local int a[2]
-            a[0] += twiddle_m[j * num_sections]
-            a[1] += twiddle_i[j * num_sections]
-
-            // the lower half values are multiplied directly
-            local int y[2]
-            call swap_arr(y, reals, imags, j + odd_offset)
-            call mul(y, a, twiddle_bits)
-            call swap_arr(y, reals, imags, j + odd_offset)
-
-            // the upper half values are multiplied by W^(N/2 - k) and flipped on the real axis
-            call swap_arr(y, reals, imags, N/4 - j + odd_offset)
-            call mul(y, a, twiddle_bits)
-            call flipr(y)
-            call swap_arr(y, reals, imags, N/4 - j + odd_offset)
-            delocal int y[2]
-
-            a[1] -= twiddle_i[j * num_sections]
-            a[0] -= twiddle_m[j * num_sections]
-            delocal int a[2]
-            j += 1
-        until j = N / 4
-        j -= N / 4
-
-        // index k = N/4 is rotated a quarter turn directly
-        local int y[2]
-        call swap_arr(y, reals, imags, N/4 + section_offset)
-        call rot90(y)
-        call swap_arr(y, reals, imags, N/4 + section_offset)
-        delocal int y[2]
+        call mul_coefficients(
+            reals,
+            imags,
+            twiddle_m,
+            twiddle_i,
+            twiddle_bits,
+            odd_offset,
+            halfwidth,
+            num_sections
+        )
 
         // convolve even and odd indexes
-        from j = 0
+        local int idx = 0
+        from idx = 0
         loop
             local int x[2]
             local int y[2]
 
-            call swap_arr(x, reals, imags, j + section_offset)
-            call swap_arr(y, reals, imags, j + odd_offset)
+            call swap_arr(x, reals, imags, idx + section_offset)
+            call swap_arr(y, reals, imags, idx + odd_offset)
             call convolve(x, y)
-            call swap_arr(y, reals, imags, j + odd_offset)
-            call swap_arr(x, reals, imags, j + section_offset)
+            call swap_arr(y, reals, imags, idx + odd_offset)
+            call swap_arr(x, reals, imags, idx + section_offset)
 
             delocal int y[2]
             delocal int x[2]
 
-            j += 1
-        until j = N / 2
+            idx += 1
+        until idx = halfwidth
+        delocal int idx = halfwidth
 
-        delocal int j = N / 2
-        delocal int odd_offset = section_offset + N/2
+        delocal int odd_offset = section_offset + halfwidth
         delocal int section_offset = section * N
 
         section += 1
     until section = num_sections
-
     delocal int section = num_sections
+
     delocal int num_sections = 2 ** (log2N - layer)
+    delocal int halfwidth = N / 2
     delocal int N = 2 ** layer
 
+// decide the index `other` to swap element index `i` with, given the size of the input
 procedure scramble_idx(int i, int other, int log2N, int N)
     local int j
     from j = 0
@@ -152,6 +178,7 @@ procedure scramble_idx(int i, int other, int log2N, int N)
     until j = log2N
     delocal int j = log2N
 
+// perform a full even-odd scramble of `arr`, making it ready for the FFT algorithm
 procedure scramble(int arr[], int log2N)
     local int N = 2 ** log2N
     local int i
@@ -182,7 +209,6 @@ procedure fft (
     int twiddle_bits
 )
     call scramble(reals, log2N)
-
     local int layer = 0
     from layer = 0
     do
