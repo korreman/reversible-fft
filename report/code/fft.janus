@@ -105,6 +105,29 @@ procedure mul_coefficients(
     fi middle > 0
     delocal int middle = length / 2
 
+// convolve even and odd indexes
+procedure convolve_pairs(int reals[], int imags[], int offset, int length)
+    local int halflength = length / 2
+    local int idx = 0
+    from idx = 0
+    loop
+        local int x[2]
+        local int y[2]
+
+        call swap_arr(x, reals, imags, idx + offset)
+        call swap_arr(y, reals, imags, idx + halflength + offset)
+        call convolve(x, y)
+        call swap_arr(y, reals, imags, idx + halflength + offset)
+        call swap_arr(x, reals, imags, idx + offset)
+
+        delocal int y[2]
+        delocal int x[2]
+
+        idx += 1
+    until idx = halflength
+    delocal int idx = halflength
+    delocal int halflength = length / 2
+
 procedure step(
     int layer,
     int log2N,
@@ -135,25 +158,7 @@ procedure step(
             num_sections
         )
 
-        // convolve even and odd indexes
-        local int idx = 0
-        from idx = 0
-        loop
-            local int x[2]
-            local int y[2]
-
-            call swap_arr(x, reals, imags, idx + section_offset)
-            call swap_arr(y, reals, imags, idx + odd_offset)
-            call convolve(x, y)
-            call swap_arr(y, reals, imags, idx + odd_offset)
-            call swap_arr(x, reals, imags, idx + section_offset)
-
-            delocal int y[2]
-            delocal int x[2]
-
-            idx += 1
-        until idx = halfwidth
-        delocal int idx = halfwidth
+        call convolve_pairs(reals, imags, section_offset, N)
 
         delocal int odd_offset = section_offset + halfwidth
         delocal int section_offset = section * N
@@ -483,7 +488,6 @@ procedure main()
     reals[253] += 24125
     reals[254] += 31572
     reals[255] += 38521
-
 
     // twiddle factor values
     twiddle_m[1] += 804

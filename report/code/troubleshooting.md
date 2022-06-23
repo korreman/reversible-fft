@@ -4,11 +4,15 @@
 [x] Convolution - works fine
 [x] Coefficient multiplication - works!
 [x] Fixed point arithmetic - also works!
+[x] Precomputed coefficients - tested with an array of unit vectors
+[x] Coefficient representation - current representation seems to work
 
-[?] Precomputed coefficients - pretty sure these are fine
-[?] Coefficient representation - current representation seems to work
-
-[ ] Step
+[x] Step
     [x] Coefficient multiplication
         [x] Edge cases
-    [ ] Convolution
+    [x] Convolution
+    [ ] Parameters given to multiplication and convolution
+
+
+[ ] Correctness of factorization
+[ ] Missing base step?
