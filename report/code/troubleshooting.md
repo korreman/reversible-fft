@@ -14,5 +14,5 @@
     ['] Parameters given to multiplication and convolution
 
 
-[ ] Correctness of factorization
-[ ] Missing base step?
+['] Correctness of factorization
+[x] Missing base step?

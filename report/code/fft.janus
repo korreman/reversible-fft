@@ -51,12 +51,12 @@ procedure convolve(int x[2], int y[2])
     call swap(x, y)
 
 // decide the index `other` to swap element index `i` with, given the size of the input
-procedure scramble_idx(int i, int other, int log2N, int N)
+procedure scramble_idx(int i, int other, int log2N)
     local int j
     from j = 0
     loop
         if (i & (1 << j)) != 0 then
-            other += N >> j + 1
+            other += 1 << log2N - j - 1
         fi (i & (1 << j)) != 0
         j += 1
     until j = log2N
@@ -104,8 +104,8 @@ procedure mul_coefficients(
     int length,
     int k_step
 )
-    local int middle = length / 2
-    if middle > 0 then // prevent index from overrunning
+    if length > 1 then
+        local int halflength = length / 2
         local int idx = 1 // skip 0, as it isn't rotated
         from idx = 1
         loop
@@ -128,16 +128,16 @@ procedure mul_coefficients(
             a[0] -= twiddle_m[idx * k_step]
             delocal int a[2]
             idx += 1
-        until idx = middle
+        until idx = halflength
 
         local int y[2]
         call swap_arr(y, reals, imags, idx + offset)
         call rot90(y)
         call swap_arr(y, reals, imags, idx + offset)
         delocal int y[2]
-        delocal int idx = middle
-    fi middle > 0
-    delocal int middle = length / 2
+        delocal int idx = halflength
+        delocal int halflength = length / 2
+    fi length > 1
 
 // convolve even and odd indexes
 procedure convolve_pairs(int reals[], int imags[], int offset, int length)
@@ -190,7 +190,6 @@ procedure step(
         )
         call convolve_pairs(reals, imags, section_offset, N)
         delocal int section_offset = section * N
-
         section += 1
     until section = num_sections
     delocal int section = num_sections
