@@ -1,17 +1,48 @@
-\section{The Fourier Transform}
-The Fourier transform is a transform
-that decomposes a function in the space/time domain to one in the frequency domain. %TODO: Domain?
-As a practical example, it can be used to obtain a histogram of pitches from a sound signal.
-
+\section{The Fourier Transform\label{sec:fourier}}
+\subsection{Definition}
+The Fourier Transform (FT) is a transform
+that decomposes a function from the space/time domain into the frequency domain. %TODO: Domain?
+If we view a function $g$ as an infinite-dimensional vector,
+then FT transforms $g$ from a representation in the standard basis
+to one in a basis of complex sinusoids.
+It can be defined as follows:
+%
 \begin{equation}
-     \hat g(k) = \int_{-\infty}^{\infty} g(x) \cdot e^{-2 \pi i k x} dx
+     \hat g(f) = \int_{-\infty}^{\infty} g(x) \cdot e^{-i 2 \pi f x} dx
 \end{equation}
+%
+An excellent visual representation of the transform is shown by \cite{3blue} in video form.
+The gist of it is that for all frequencies $f$,
+$g$ is wound around the unit circle in the complex plane with periodicity corresponding to $f$,
+and the $\hat g(f)$ is the ``average'' value is given by the integral.
+Any frequencies present in $g$ will be represented as a deviation from zero in $\hat g(f)$.
+%
+% TODO: Figure
 
+The Fourier inversion theorem states that,
+for certain functions,
+the inverse of the Fourier transform can be obtained by:
 \begin{equation}
-     \hat g(k) = \int_{t_1}^{t_2} g(x) \cdot e^{-2 \pi i k x} dx \cdot (t_2 - t_1)
+     g(x) = \int_{-\infty}^{\infty} \hat g(f) \cdot e^{i 2 \pi f x} df
 \end{equation}
 
 \subsection{Discrete Fourier Transform}
+In real-world applications, we usually aren't working with continuous functions.
+Typically we have a sequence of uniformly spaced samples approximating a recorded signal,
+and wish to compute something FT-like for this.
+We cannot compute the FT of such a signal,
+but we can approximate it using the Discrete Fourier Transform (DFT):
+%
 \begin{equation}
-    X(k) = \sum_{n = 0}^{N - 1} x(n) \cdot e^{-2 \pi i kn / N} ~,~ k \in [0; N)
+    X(k) = \sum_{n = 0}^{N - 1} x(n) \cdot e^{-i 2 \pi kn / N}
 \end{equation}
+%
+The DFT is also an invertible, linear transformation.
+The Inverse Discrete Fourier Transform (IDFT) is defined as:
+\begin{equation}
+    x(n) = \sum_{k = 0}^{N - 1} X(k) \cdot e^{i 2 \pi kn / N}
+\end{equation}
+%
+We are interested in writing an efficient reversible algorithm
+which computes the DFT when run in the forward direction
+and computes the IDFT when run in the backwards direction.

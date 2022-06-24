@@ -1,0 +1,51 @@
+This is BibTeX, Version 0.99d (TeX Live 2022/Arch Linux)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: master.aux
+The style file: plain.bst
+Database file #1: refs.bib
+Warning--entry type for "3blue" isn't style-file defined
+--line 32 of file refs.bib
+Warning--entry type for "brunton" isn't style-file defined
+--line 40 of file refs.bib
+You've used 4 entries,
+            2118 wiz_defined-function locations,
+            524 strings with 4672 characters,
+and the built_in function-call counts, 1277 in all, are:
+= -- 130
+> -- 45
+< -- 1
++ -- 19
+- -- 14
+* -- 63
+:= -- 199
+add.period$ -- 13
+call.type$ -- 4
+change.case$ -- 19
+chr.to.int$ -- 0
+cite$ -- 4
+duplicate$ -- 58
+empty$ -- 108
+format.name$ -- 14
+if$ -- 288
+int.to.chr$ -- 0
+int.to.str$ -- 4
+missing$ -- 2
+newline$ -- 23
+num.names$ -- 8
+pop$ -- 28
+preamble$ -- 1
+purify$ -- 15
+quote$ -- 0
+skip$ -- 55
+stack$ -- 0
+substring$ -- 60
+swap$ -- 23
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 16
+warning$ -- 0
+while$ -- 10
+width$ -- 5
+write$ -- 47
+(There were 2 warnings)

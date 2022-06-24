@@ -48,6 +48,9 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta}
 \usetikzlibrary{positioning}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{setspace}
+\usepackage{subcaption}
 %%%%% End project-specific settings %%%%%
 
 % change paragraph
@@ -76,9 +79,9 @@
     \author{Troels Korreman Nielsen (xck773)}
     \date{\today}
     \maketitle
-    %\begin{abstract}
-    %    \input{abstract}
-    %\end{abstract}
+    \begin{abstract}
+        \input{abstract}
+    \end{abstract}
     \tableofcontents
     %\listoffigures
     %\listoftables
@@ -91,5 +94,6 @@
     \input{impl}
 
     % use bibtex for references
-    \bibliography{bibliography}
+    \bibliographystyle{plain}
+    \bibliography{refs}
 \end{document}

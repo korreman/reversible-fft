@@ -1,0 +1,27 @@
+\begin{thebibliography}{1}
+
+\bibitem{brunton}
+Steve Brunton.
+\newblock {The Fast Fourier Transform Algorithm}, 2020.
+\newblock \url{https://www.youtube.com/watch?v=toj_IoCQE-4}.
+
+\bibitem{intfft}
+S.~Oraintara, Y.J. Chen, and T.Q. Nguyen.
+\newblock Integer fast fourier transform.
+\newblock {\em IEEE Transactions on Signal Processing}, 50(3):607--618, 2002.
+
+\bibitem{3blue}
+Grant Sanderson.
+\newblock But what is the {F}ourier {T}ransform? {A} visual introduction.,
+  2018.
+\newblock \url{https://www.youtube.com/watch?v=spUNpyF58BY}.
+
+\bibitem{janus2007}
+Tetsuo Yokoyama and Robert Gl\"{u}ck.
+\newblock A reversible programming language and its invertible
+  self-interpreter.
+\newblock In {\em Proceedings of the 2007 ACM SIGPLAN Symposium on Partial
+  Evaluation and Semantics-Based Program Manipulation}, PEPM '07, page
+  144–153, New York, NY, USA, 2007. Association for Computing Machinery.
+
+\end{thebibliography}
