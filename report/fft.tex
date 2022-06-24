@@ -76,13 +76,13 @@ Since $W_{N/2}^{k + N/2} = W_{N/2}^k$, we also have $X_\textit{even}(k + N/2) = 
 Thus we can wrap around for $k \in [N/2;N)$ and use $k' = k - N/2$ in the stead of $k$.
 
 For the upper values of $k$, we can save more work.
-From the symmetry property we get $W_N^k = W_N^{k' + N/2} = -W_N^{k'}$.
+From the symmetry property we get $W_N^k = W_N^{k - N/2} = -W_N^{k}$.
 This gives us the final formulation of our factorization:
 \begin{equation}
     X(k) =
     \begin{cases}
-        X_\textit{even}(k) + W_N^k X_\textit{odd}(k) &\text{if}~k < N \\
-        X_\textit{even}(k') - W_N^{k'} X_\textit{odd}(k') &\text{if}~k \geq N ~\text{where}~k' = k - N/2
+        X_\textit{even}(k) + W_N^k X_\textit{odd}(k) &\text{if}~k \in [0;N/2) \\
+        X_\textit{even}(k') - W_N^{k'} X_\textit{odd}(k') &\text{if}~k \in [N/2;N) ~\text{where}~k' = k - N/2
     \end{cases}
 \end{equation}
 

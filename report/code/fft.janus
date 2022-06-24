@@ -41,15 +41,6 @@ procedure rot90(int x[2])
     x[0] <=> x[1]
     call flipr(x)
 
-// convolves x and y resulting in:
-// x' = x + y
-// y' = x - y
-procedure convolve(int x[2], int y[2])
-    call sub(x, y)
-    call mul2(y)
-    call add(y, x)
-    call swap(x, y)
-
 // decide the index `other` to swap element index `i` with, given the size of the input
 procedure scramble_idx(int i, int other, int log2N)
     local int j
@@ -139,6 +130,15 @@ procedure mul_coefficients(
         delocal int halflength = length / 2
     fi length > 1
 
+// convolves x and y resulting in:
+// x' = x + y
+// y' = x - y
+procedure convolve(int x[2], int y[2])
+    call sub(x, y)
+    call mul2(y)
+    call add(y, x)
+    call swap(x, y)
+
 // convolve even and odd indexes
 procedure convolve_pairs(int reals[], int imags[], int offset, int length)
     local int halflength = length / 2
@@ -186,7 +186,7 @@ procedure step(
             twiddle_bits,
             section_offset + N / 2,
             N / 2,
-            num_sections
+            num_sections / 2
         )
         call convolve_pairs(reals, imags, section_offset, N)
         delocal int section_offset = section * N
