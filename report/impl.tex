@@ -6,25 +6,28 @@ The extra features provided make managing a larger program much easier
 than it would've been in base Janus.
 
 Despite the lack of documentation and downloadable executables,
-it was possible to implement and run the algorithm.
+it was possible to implement and run the FFT algorithm.
 The code is included in appendix \ref{app:code}.
-As can be seen in figure \ref{fig:test},
-the program successfully computes the FFT of an input signal.
+The results from a test run is shown in figure \ref{fig:test},
+where we see the program successfully computing the FFT of an input signal.
 The test signal is a combination of two sine curves with different frequencies,
-and the FFT is shown to clearly identify these.
+and the FFT is shown to identify these.
 
 Complex numbers are represented by arrays of 2 elements each.
-Two arrays are used for the real and imaginary components of the main storage and twiddle factors.
+Two arrays are used for the real and imaginary components of the signal.
+The same is true for the twiddle factors.
 To simplify things, numerical operations for complex numbers are implemented as procedures.
-From there, functions for scrambling,
-twiddle factor multiplication, and convolution are implemented.
-The \texttt{fft} and \texttt{step} procedures manage the scrambling, multiplication, and convolving
-of the array.
+
+The program tries to mimic the structure of the lattice diagram shown in figure \ref{fig:lattice}.
+There are procedures for scrambling, multiplication of odds,
+and convolution of even-odd solution pairs.
+The \texttt{fft} and \texttt{step} invoke these procedures in layered steps
+with parameters unique to each step.
 
 The bit depth of the twiddle factor was chosen somewhat arbitrarily to be 16.
 The depth of the input is up to the user,
-but 16 bits was chosen for the test.
-This seems fitting, as most sound is stored in a signed 16 bit format.
+but 16 bits was also chosen for the test.
+This seemed fitting, as most sound is stored in a signed 16 bit format.
 
 \begin{figure}
     \centering

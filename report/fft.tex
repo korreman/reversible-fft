@@ -76,7 +76,8 @@ In the interest of simplicity,
 we adapt a factorization presented in \cite{brunton}.
 FFT factorizations are traditionally expressed in matrix form,
 but this factorization is simple enough that we can skip that step.
-Note that the factorization as presented only works for inputs of length $N = 2^\gamma$.
+Note that the factorization as presented only works for inputs of length
+$N = 2^\gamma,~~\gamma \in \mathbb{Z}^+$.
 
 The first step of the factorization
 is to split the input list $x$ into even- and odd-indexed elements:
@@ -85,7 +86,7 @@ is to split the input list $x$ into even- and odd-indexed elements:
     &x_\textit{odd}  = \langle x_{2n + 1} ~|~ n \in [0; N/2) \rangle
 \end{align}
 %
-Next, we define the DFTs of these new lists.
+Next, we take the DFTs of these new lists.
 Using the scaling property of the twiddle factor,
 we can express these DFTs using $W_N^{2nk}$ rather than $W_{N/2}^{nk}$:
 \begin{align}
@@ -96,7 +97,7 @@ we can express these DFTs using $W_N^{2nk}$ rather than $W_{N/2}^{nk}$:
 Now we can reformulate $X(k)$ using $X_\textit{even}$ and $X_\textit{odd}$.
 We split the sum into sums of even- and odd-indexed elements,
 factor out a coefficient of the odd sum,
-and then substitute:
+and then substitute the even and odd DFTs:
 \begin{align}
     X(k) &= \sum_{n = 0}^{N - 1} W_N^{nk} x(n) \\
     &= \sum_{n = 0}^{N/2 - 1} W_N^{2nk} x(2n) + \sum_{n = 0}^{N/2 - 1} W_N^{(2n + 1)k} x(2n + 1) \\
@@ -120,12 +121,13 @@ Thus we can ``wrap around'' for the upper half of $X$:
 The last step
 \begin{itemize}
     \item halves the number of multiplications,
-    \item allows us to trivially compute the FFT in-place,
+    \item allows us to easily compute the FFT in-place,
     \item and defines the FFT in such a way that it can be directly inverted.
 \end{itemize}
 
-From the symmetry property of the twiddle factor, we get $W_N^k = -W_N^{k - N/2} = -W_N^{k'}$.
-Because of this,
+From the symmetry and periodicity properties of the twiddle factor,
+we get $W_N^k = -W_N^{k - N/2} = -W_N^{k'}$.
+Because of this equivalence,
 we can multiply the odd DFT by the same coefficient when computing the lower and upper DFT of $X$.
 This gives us the final factorization:
 \begin{equation}
@@ -148,8 +150,11 @@ we can construct an algorithm to compute the FFT:
     \setstretch{1.2}
     \DontPrintSemicolon
     \caption{$\textsc{FFT}(x, N)$}
-    \KwIn{Discrete uniformly spaced signal $x$ with size $N = 2^\gamma$.}
+    \KwIn{Discrete uniformly spaced signal $x$ with size $N = 2^\gamma,~~\gamma \in \mathbb{Z}$.}
     \KwOut{Discrete Fourier Transform of $x$.}
+    \If{$N = 1$}{
+        \KwRet{$x$}
+    }
     Let $x_\textit{even} = \langle x(2n) ~|~ n \in [0;N/2) \rangle$\;
     Let $x_\textit{odd} = \langle x(2n + 1) ~|~ n \in [0;N/2) \rangle$\;
     Let $X_\textit{even} = \textsc{FFT}(x_\textit{even}, ~N/2)$\;
@@ -164,7 +169,7 @@ we can construct an algorithm to compute the FFT:
 
 The algorithm performs two recursive calls with sizes $N/2$.
 Then it performs $O(N)$ work to combine the results.
-We can thus prove the time bound with a recursive formula:
+We can thus show the time bound with a recursive formula:
 \begin{equation}
     T(N) = O(N) + 2T(N/2) = O(N \log N)
 \end{equation}

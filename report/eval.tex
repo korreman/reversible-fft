@@ -1,13 +1,17 @@
 \section{Conclusion}
-In this report, we have explored the Fourier Transform and its discrete fixed-time cousin,
+In this report, we have explored the Fourier Transform and its discrete fixed-time sibling, the
 Discrete Fourier Transform.
 We have seen how the DFT sum can be factorized into a recursive formulation,
-allowing us to develop an $O(N \log N)$-time algorithm for computing this,
+allowing us to develop an $O(N \log N)$-time algorithm for computing it,
 called the Fast Fourier Transform.
 We have shown how, using even-odd scrambling, fixpoint arithmetic,
-and lifting scheme, the FFT can be computed in-place and reversibly.
+and lifting schemes, the FFT can be computed in-place and reversibly.
 Finally, we have implemented this FFT in the reversible programming language Janus,
-demonstrating that our algorithm is reversible in theory \textit{and} in practice.
+demonstrating that our algorithm is reversible in practice.
 
-Further work might explore the challenge of improving the algorithm to be bijective,
-rather than only injective, potentially at the cost of some precision/correctness.
+Further work might explore the challenge of making the transform bijective,
+with the goal of deciding whether or not this is possible.
+It would also be interesting to explore the possibility of implementing
+the Discrete Cosine Transform
+\footnote{\url{https://en.wikipedia.org/wiki/Discrete_cosine_transform}}
+in a reversible language.

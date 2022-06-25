@@ -1,24 +1,23 @@
 \section{Reversible FFT}
 As mentioned in section \ref{sec:fourier},
 both FT and DFT are invertible sums.
-The definition of IDFT also permits a factorization that is essentially equivalent to that of DFT.
+The definition of IDFT also permits a factorization that is essentially equivalent to that of the DFT.
 However, we wish to write a reversible DFT that can be directly inverted to obtain an IDFT.
 There are some challenges that must be overcome in order to do this.
-The primary challenges are detailed in \cite{intfft},
-which presents some solutions to these.
+Most of the challenges are detailed in \cite{intfft}, which also presents solutions to these.
 
 \subsection{In-place computation}
-The FFT algorithm described int the previous section
+The FFT algorithm described in the previous section
 creates two new arrays of even- and odd-indexed elements.
 Rather than create new arrays,
 we can rearrange the evens and odds into the upper and lower half of the array,
 then recurse on these halfs.
 This allows the transform to be performed in-place.
 
-Taking it further, rather than rearranging the array at every recursion level,
+Taking it further, rather than rearranging the array at every recursion step,
 we can perform a single equivalent rearrangement of the array at the start of the algorithm.
 This is usually referred to as a scrambling of the array.
-In order to get an arrangement equivalent to recursively separating evens and odds,
+In order to get an arrangement equivalent to recursively separating evens and odds down to the base case,
 we swap the element at each index with the index obtained from reversing its bit string.
 
 After scrambling,
@@ -30,15 +29,16 @@ Figure \ref{fig:lattice} shows this strategy in action for an array of size 8.
 \input{lattice.tex}
 
 \subsection{Fixpoint arithmetic}
-The first problem is that we must find a way to represent complex numbers.
-Complex numbers are generally represented by $a, b \in \mathbb{R}$ such that $n = a + bi$.
-You might wish to use floating point numbers to represent $a$ and $b$,
-but updates to these are destructive.
+The next problem is that we must find a way to represent complex numbers.
+Complex numbers can represented by two reals $a_r, a_i \in \mathbb{R}$ such that $a = a_r + ib_i$.
+Your first idea might be to use floating point numbers to represent $a_r$ and $b_i$,
+but updates to floats are inherently destructive.
 
 Instead, we use a fix-point representation.
-We represent real numbers by $r = x \cdot 2^{-p},~~ x, p \in \mathbb{Z}$.
-The value of $p$ is known as the fix-point for $r$.
-We will store $r$ in an integer, and $p$ will be implicit for the most part.
+Each real number can be written as $r = x \cdot 2^{-p},~~ x, p \in \mathbb{Z}$.
+The value of $p$ is known as the fix-point for $r$,
+and can be visualized as a decimal point (binary point?) in the bit string.
+We will store $r$ in an integer, and $p$ will generally be implicit.
 Operations on these numbers can be performed with the integer equivalents on the $x$ value.
 
 Ignoring overflows, both addition and subtraction are invertible.
@@ -46,42 +46,42 @@ Multiplication is only injective ie. left-invertible.
 This is quite clear when you consider what happens when dividing an odd number by 2.
 Furthermore, it should be noted that multiplication of two numbers with fix-points $p_1$ and $p_2$
 results in a number with fix-point $p_1 + p_2$.
-When not updating in-place,
-we can round off the lower bits of multiplication-results to keep the fix-point in place.
+We may wish to quantize (round) these integers to move the fixpoint back,
+but this is a destructive operation.
 
 \subsection{Lifting steps}
-Central operations of our FFT algorithm
+Some central operations of our FFT algorithm
 must update two variables at once in a butterfly-like structure.
 That is to say, each value must be updated in a way that is dependent on both itself and the other,
 creating a datapath that looks like a ``butterfly''.
-Mutually dependent simultaneous updates are a problem for reversability,
+Mutually dependent simultaneous updates are a problem for reversibility,
 as we cannot recover the original values.
-Our specific updates \textit{can} be reversed, at least mathematically.
+Luckily, our specific updates \textit{can} be reversed, at least in a mathematical sense.
 
-In order to make them practically reversible in a reversible language,
+In order to make them practically reversible,
 we can convert them into a series of \textit{lifting steps}.
 This method is described in detail in \cite{lifting1998},
-although we use the method somewhat differently.
-Figure \ref{fig:lift} shows the concept as a datapath.
+although we use the method for somewhat simpler tasks.
 
-Say you have two variables $A$ and $B$.
+Figure \ref{fig:lift} shows the concept as datapaths.
+Say we need to perform a ``butterfly'' update on two variables $A$ and $B$.
 Instead of performing simultaneous updates,
 we can run $B$ through some function $F$ and add it to $A$.
 Next, we can run $A$ through another function $G$ and add it back to $B$.
-Since the value added at each step can still be derived after the step,
+Since the value added at each step can still be derived after the addition,
 we can reverse the operation by deriving and subtracting the same values in the opposite order.
 
-If we can represent a butterfly update as a lifting scheme, we can invert it.
+If we can represent a butterfly update as a lifting scheme, we can reverse it.
 The method also has another benefit;
-the functions applied to values before they are added to the variables do not have to be reversible.
-Our functions will be multiplications,
-which would force a great increase in bit-depth for every multiplication.
-We can avoid this by quantizing (rounding) the values down before adding them,
-preserving the original fixpoint throughout applying the lifting scheme.
+the in-between functions like $F$ and $G$ do not have to be reversible.
+If the functions produce a lot of new information, we can quantize the result before addition.
+For example, fixpoint multiplication adds some amount $p$ bits of resolution to the result,
+but this can be thrown out by rounding (eg. through left-shifting) the result
+before adding it to either $A$ or $B$.
 \input{lifting_diagram}
 
 \subsection{Complex multiplication}
-As a reminder, the formula for complex multiplication is given by:
+As a reminder, complex multiplication is performed with:
 \begin{equation}
     ax = (a_r + a_i \cdot i)(x_r + x_i \cdot i) = a_rx_r - a_ix_i + (a_r x_i + a_ix_r)i
 \end{equation}
@@ -125,7 +125,7 @@ These multiplications can be performed by the lifting steps shown in figure \ref
 Figure \ref{fig:complexmulc} shows the lifting scheme with added quantization steps.
 As for how to obtain these coefficients,
 we can pre-compute them and add them to the program as a lookup table.
-It is only necessary to compute the coefficients for $W_N^k,~k \in (0;N/4)$, as:
+It is only necessary to compute the coefficients $W_N^k,~k \in (0;N/4)$, as:
 \begin{itemize}
     \item $W_N^0 x$ and $W_N^{N/4} x$ can be trivially computed without coefficients.
     \item $W_N^k x$ for $k \in (N/4; N/2)$ can be computed by with $-W_N^{-k}$.
@@ -139,30 +139,30 @@ It is only necessary to compute the coefficients for $W_N^k,~k \in (0;N/4)$, as:
 As can be seen quite clearly in the FFT datapath example (figure \ref{fig:lattice}),
 merging the results of recursive steps requires a second butterfly update.
 This time, we need to compute
-$x_\text{new} = x + y$ and $y_\text{new} = x - y$ in-place (see figure \ref{fig:conva}).
-After this convolution, the original value of $y$ can be retrieved with
-$y = (x_\text{new} - y_\text{new})/2$, and $x$ can be retrieved from $x = x_\text{new} - y$.
+$x_\text{new} = x + y$ and $y_\text{new} = x - y$ in-place (figure \ref{fig:conva}).
+This is a reversible computation, as the original value of $y$ can be retrieved with
+$y = (x_\text{new} - y_\text{new})/2$, and $x$ can be retrieved with $x = x_\text{new} - y$.
 We can encode this reversibility by implementing the convolution as lifting steps,
 as seen in figure \ref{fig:convb}.
 
 \input{convolution}
 
-This introduces a significant problem to the reversibility of our algorithm.
-This operation isn't \textit{fully} implemented as lifting steps,
+This introduces a significant challenge to the reversibility of our algorithm.
+This operation isn't \textit{only} implemented through lifting steps,
 but requires an in-place doubling of $y$.
-Multiplications are only injective,
-as outputs must be a multiple of the for them to correspond to an input factor.
+Integer multiplications are only injective,
+as outputs must be a multiple of the factor for them to correspond to an input value.
 As a result, the inverse is only partially defined, for outputs that are a factor of 2 apart.
-\cite{intfft} doesn't take up this issue.
-After all, you can divide by 2 and round off the result when needed,
-without changing the behavior for valid outputs.
-But this doesn't hold in a completely reversible context.
+This issue isn't covered by \cite{intfft}.
+When reversing, you can divide by 2 and round off the result to get a decent result
+without changing the semantics for valid outputs.
+This strategy won't work in a fully reversible system however.
 
 For our implementation,
 we write a multiplication function that panics when run in reverse on uneven output.
 This does have the disadvantage that our inverse FFT doesn't work on all outputs.
-There may be workarounds for this,
-but that wont be explored in the limited scope of this project.
+There may be workarounds for this issue,
+but that wont be explored in the scope of this project.
 
 \subsection{Bit resolution}
 At this point,
@@ -171,15 +171,17 @@ While the algorithm is reversible,
 the output \textit{does} require more bits to represent than the input.
 
 The offenders that produce these bits are the twiddle factor multiplications and convolutions.
+It should be fairly obvious to see that convolution increases bit-depth by one,
+as it effectively only performs either a subtraction or addition to the target variables.
 It isn't hard to see that convolution increases the bit-depth of the complex components by 1.
 For multiplication, the quantization in the lifting scheme (figure \ref{fig:complexmulc})
-step removes the worst of the depth increase.
+step removes the worst of the bit-depth increase.
 That leaves three additions, each increasing the depth by one bit.
-While \cite{intfft} proves
-that we can limit the increase for twiddle factor multiplication by 1,
-we settle for a bit more.
+While \cite{intfft} does prove
+that we can limit the increase for twiddle factor multiplication to one bit,
+we settle for a bound of 3 bits.
 
 For every recursive step of the algorithm,
 each cell of our input array may be multiplied by one coefficient
-and will be convolved with another cell.
+and will be convoluted with another cell.
 That makes for a 4 bit depth-increase per layer, and total a limit of $4 \log_2 N$ additional bits.
