@@ -5,7 +5,7 @@ By exploiting certain redundancies,
 we can recursively factorize the sum in such a way that it can be computed in $O(N \log N)$ time.
 An algorithm that takes advantage of such factorizations is called a Fast Fourier Transform (FFT).
 
-A comprehensive explanation of FT, DFT, and FFT can be found in \cite{brunton}.
+A comprehensive explanation of FT, DFT, and FFT can be found in \cite{fft}.
 This book uses the Cooley-Tukey algorithm,
 but we will use a different factorization for simplicity and brevity.
 
@@ -20,25 +20,46 @@ Using this, we can then rephrase the DFT as:
 \begin{equation}
     X(k) = \sum_{n = 0}^{N - 1} W_N^{nk} x(n)
 \end{equation}
-% TODO
-% \begin{figure}
-%     \centering
-%     \begin{tikzpicture}
-%
-%     \end{tikzpicture}
-%     \caption{The twiddle factor in the complex plane.\label{fig:twid}}
-% \end{figure}
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \draw[step=1, gray, very thin] (-1.8, -0.8) grid (1.8, 1.8);
+        \draw[->] (-2.3,0) -- (2.3,0) coordinate (x axis);
+        \draw[->] (0,-0.9) -- (0,2.3) coordinate (y axis);
+        \node (unit) at (0.4, 0.25){\footnotesize 1};
+        \node (w) at (0.5, 0.87)[circle, fill=black, minimum size=2mm, inner sep=0mm, label=above:$W_N^k$]{};
+        \node (theta) at (2,0.6){$\theta = 2 \pi k/N$};
+        \path[thick, ->, draw] (0,0) -- (w);
+        \draw[thick] (1,0) arc[radius = 1, start angle=0, end angle=60];
+
+        \draw[step=1, gray, very thin] (4.2, -0.8) grid (9.8, 2.8);
+        \draw[->] (4.1,0) -- (9.9,0) coordinate (x axis);
+        \draw[->] (7,-0.9) -- (7,2.9) coordinate (y axis);
+        \node (x) at (7.7, 1.8) [circle, fill=black, minimum size=2mm, inner sep=0mm, label=above:$x$]{};
+        \node (wx) at (5.79,1.51)[circle, fill=black, minimum size=2mm, inner sep=0mm, label=above left:$W_N^k x$]{};
+        \draw[thick, ->] (7,0) -- (x);
+        \draw[thick, ->] (7,0) -- (wx);
+        \draw[thick, ->] (7.7, 1.8) arc[radius = 1.93, start angle=68.75, end angle=125.75];
+        \node (theta2) at (6.5, 2.2){$\theta$};
+    \end{tikzpicture}
+    \caption{Representing the twiddle factor in the complex plane.
+    The factor itself is a unit vector with angle $\theta$.
+    Multiplying some $x$ by this number is equivalent to rotating $x$ by $\theta$.\label{fig:twid}}
+\end{figure}
 The twiddle factor can viewed as a rotation of the complex number $1 + 0i$
 around $0 + 0i$ in the complex plane, scaled by $1/N$.
 Multiplying some complex number $x$ by $W_N^k$
-will thus rotate $x$ by an angle of $2 \pi \cdot k/N$.
-%TODO: Figure
+will thus rotate $x$ by an angle of $\theta = 2 \pi \cdot k/N$ (see figure \ref{fig:twid}).
+As such, we can compute twiddle factors by
+\begin{equation}
+    W_N^k = \cos \theta + i \sin \theta,~~\theta = 2\pi k/N
+\end{equation}
 
-Since $W_N^k$ is a rotation,
-it has certain properties that we can exploit.
+As a result of being a rotated unit vector,
+the twiddle factor has certain properties that we can exploit.
 Namely, it wraps around after a full rotation,
 taking its negative is equivalent to making a half rotation,
-and scaling $k$ by some $c$ is the same as changing the built-in scaling $N$.
+and upscaling $k$ by some constant $c$ is the same as downscaling $N$ by $1/c$.
 These properties can be formally expressed as follows:
 \begin{align}
     \textbf{Periodicity:} &~~W^k_N = W^{k + N}_N\\
@@ -48,7 +69,6 @@ These properties can be formally expressed as follows:
 Having observed these, we can now move on to the factorization.
 
 \subsection{Factorization}
-
 There are numerous different ways in which the DFT sum can be factorized.
 They all have the same $O(N \log N)$ time complexity,
 but differ in the concrete amount of operations that they require.
@@ -120,7 +140,6 @@ until we have divided our input into pieces of size 1.
 Conveniently, the DFT of $\langle v \rangle$ is simply $\langle v \rangle$,
 so this makes for a simple base case.
 
-
 \subsection{Algorithm}
 With the factorization in place,
 we can construct an algorithm to compute the FFT:
@@ -149,3 +168,5 @@ We can thus prove the time bound with a recursive formula:
 \begin{equation}
     T(N) = O(N) + 2T(N/2) = O(N \log N)
 \end{equation}
+Now that we have a general overview of the algorithm,
+we can move on to the subject of reversibility.

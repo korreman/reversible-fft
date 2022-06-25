@@ -5,11 +5,21 @@ Steve Brunton.
 \newblock {The Fast Fourier Transform Algorithm}, 2020.
 \newblock \url{https://www.youtube.com/watch?v=toj_IoCQE-4}.
 
+\bibitem{fft}
+James~W. Cooley, Peter A.~W. Lewis, and Peter~D. Welch.
+\newblock The fast fourier transform and its applications.
+\newblock {\em IEEE Transactions on Education}, 12(1):27--34, 1969.
+
 \bibitem{lifting1998}
 Ingrid Daubechies and Wim Sweldens.
 \newblock Factoring wavelet transforms into lifting steps.
 \newblock {\em Journal of Fourier Analaysis and Applications}, 4:247--269,
   1998.
+
+\bibitem{extjanus}
+Claus~Skou Nielsen, Michael Budde, and Michael~Kirkedal Thomsen.
+\newblock Extended janus playground.
+\newblock \url{https://topps.di.ku.dk/pirc/?id=janusP}.
 
 \bibitem{intfft}
 S.~Oraintara, Y.J. Chen, and T.Q. Nguyen.

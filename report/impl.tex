@@ -1,4 +1,40 @@
 \section{Implementation}
+Putting the theory into practice,
+let us implement our algorithm in a reversible system.
+Our language of choice is the extended version\cite{extjanus} of Janus\cite{janus2007}.
+The extra features provided make managing a larger program much easier
+than it would've been in base Janus.
 
-In order to test the correctness and invertibility of the algorithm,
-it was implemented in the reversible language Janus\cite{janus2007}.
+Despite the lack of documentation and downloadable executables,
+it was possible to implement and run the algorithm.
+The code is included in appendix \ref{app:code}.
+As can be seen in figure \ref{fig:test},
+the program successfully computes the FFT of an input signal.
+The test signal is a combination of two sine curves with different frequencies,
+and the FFT is shown to clearly identify these.
+
+Complex numbers are represented by arrays of 2 elements each.
+Two arrays are used for the real and imaginary components of the main storage and twiddle factors.
+To simplify things, numerical operations for complex numbers are implemented as procedures.
+From there, functions for scrambling,
+twiddle factor multiplication, and convolution are implemented.
+The \texttt{fft} and \texttt{step} procedures manage the scrambling, multiplication, and convolving
+of the array.
+
+The bit depth of the twiddle factor was chosen somewhat arbitrarily to be 16.
+The depth of the input is up to the user,
+but 16 bits was chosen for the test.
+This seems fitting, as most sound is stored in a signed 16 bit format.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.8\textwidth}
+        \resizebox{\textwidth}{!}{\input{fft_input.pgf}}
+        \caption{Input signal: two combined sine functions with frequencies $1/3$ and $1/7$.}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.8\textwidth}
+        \resizebox{\textwidth}{!}{\input{fft_result.pgf}}
+        \caption{Magnitude of FFT result.}
+    \end{subfigure}
+    \caption{Results from a test run of the Janus FFT implementation.\label{fig:test}}
+\end{figure}

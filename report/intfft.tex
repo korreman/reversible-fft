@@ -8,25 +8,25 @@ The primary challenges are detailed in \cite{intfft},
 which presents some solutions to these.
 
 \subsection{In-place computation}
-The FFT algorithm described in section \ref{sec:fft} can be performed in-place with a single array.
-
-Rather than create new arrays for evens and odds,
-we can rearrange the evens and odds into the upper and lower half of the array respectively,
+The FFT algorithm described int the previous section
+creates two new arrays of even- and odd-indexed elements.
+Rather than create new arrays,
+we can rearrange the evens and odds into the upper and lower half of the array,
 then recurse on these halfs.
+This allows the transform to be performed in-place.
 
 Taking it further, rather than rearranging the array at every recursion level,
-we can perform one equivalent rearrangement of the array.
+we can perform a single equivalent rearrangement of the array at the start of the algorithm.
 This is usually referred to as a scrambling of the array.
-In order to get an equivalent rearrangement,
+In order to get an arrangement equivalent to recursively separating evens and odds,
 we swap the element at each index with the index obtained from reversing its bit string.
 
 After scrambling,
 we have $N/2$ pairs of even and odd base cases placed next to each other.
-These pairs can be combined, giving us $N/4$ pairs of size 2 FFT solutions.
-We then combine these pairs into $N/8$ solutions,
+These can be merged, giving us $N/4$ pairs of size 2 FFT solutions.
+We then merge these solutions into $N/8$ size 4 solutions,
 and repeat until we have obtained an FFT for the full array.
 Figure \ref{fig:lattice} shows this strategy in action for an array of size 8.
-
 \input{lattice.tex}
 
 \subsection{Fixpoint arithmetic}
@@ -78,7 +78,6 @@ Our functions will be multiplications,
 which would force a great increase in bit-depth for every multiplication.
 We can avoid this by quantizing (rounding) the values down before adding them,
 preserving the original fixpoint throughout applying the lifting scheme.
-
 \input{lifting_diagram}
 
 \subsection{Complex multiplication}
@@ -129,8 +128,7 @@ we can pre-compute them and add them to the program as a lookup table.
 It is only necessary to compute the coefficients for $W_N^k,~k \in (0;N/4)$, as:
 \begin{itemize}
     \item $W_N^0 x$ and $W_N^{N/4} x$ can be trivially computed without coefficients.
-    \item $W_N^k x$ for $k \in (N/4; N/2)$
-        can be computed by flipping the real component of $W_N^{N/2 - k}$.
+    \item $W_N^k x$ for $k \in (N/4; N/2)$ can be computed by with $-W_N^{-k}$.
     \item $W_N^k$ for $k \in [N/2;N)$ is never used.
     \item $W_{N/2^L}^k x$ can be obtained from $W_N^{2^L k} x$.
 \end{itemize}
@@ -138,22 +136,50 @@ It is only necessary to compute the coefficients for $W_N^k,~k \in (0;N/4)$, as:
 \input{complexmul}
 
 \subsection{Reversible convolution}
+As can be seen quite clearly in the FFT datapath example (figure \ref{fig:lattice}),
+merging the results of recursive steps requires a second butterfly update.
+This time, we need to compute
+$x_\text{new} = x + y$ and $y_\text{new} = x - y$ in-place (see figure \ref{fig:conva}).
+After this convolution, the original value of $y$ can be retrieved with
+$y = (x_\text{new} - y_\text{new})/2$, and $x$ can be retrieved from $x = x_\text{new} - y$.
+We can encode this reversibility by implementing the convolution as lifting steps,
+as seen in figure \ref{fig:convb}.
+
 \input{convolution}
 
-\begin{lstlisting}
-procedure mul2
-    if y = 0 then
-        y += x
-        x += y
-        y -= x / 2
-    fi y = 0
-\end{lstlisting}
+This introduces a significant problem to the reversibility of our algorithm.
+This operation isn't \textit{fully} implemented as lifting steps,
+but requires an in-place doubling of $y$.
+Multiplications are only injective,
+as outputs must be a multiple of the for them to correspond to an input factor.
+As a result, the inverse is only partially defined, for outputs that are a factor of 2 apart.
+\cite{intfft} doesn't take up this issue.
+After all, you can divide by 2 and round off the result when needed,
+without changing the behavior for valid outputs.
+But this doesn't hold in a completely reversible context.
 
-% TODO: Mention that the paper doesn't actually try to make directly reversible convolution
+For our implementation,
+we write a multiplication function that panics when run in reverse on uneven output.
+This does have the disadvantage that our inverse FFT doesn't work on all outputs.
+There may be workarounds for this,
+but that wont be explored in the limited scope of this project.
 
-\begin{lstlisting}
-x -= y
-call mul2
-y += x
-x <=> y
-\end{lstlisting}
+\subsection{Bit resolution}
+At this point,
+all parts of the algorithm have been molded into reversible operations.
+While the algorithm is reversible,
+the output \textit{does} require more bits to represent than the input.
+
+The offenders that produce these bits are the twiddle factor multiplications and convolutions.
+It isn't hard to see that convolution increases the bit-depth of the complex components by 1.
+For multiplication, the quantization in the lifting scheme (figure \ref{fig:complexmulc})
+step removes the worst of the depth increase.
+That leaves three additions, each increasing the depth by one bit.
+While \cite{intfft} proves
+that we can limit the increase for twiddle factor multiplication by 1,
+we settle for a bit more.
+
+For every recursive step of the algorithm,
+each cell of our input array may be multiplied by one coefficient
+and will be convolved with another cell.
+That makes for a 4 bit depth-increase per layer, and total a limit of $4 \log_2 N$ additional bits.

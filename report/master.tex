@@ -48,6 +48,8 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta}
 \usetikzlibrary{positioning}
+\usepackage{pgf}
+\usepackage{lmodern}
 \usepackage[linesnumbered,ruled,vlined]{algorithm2e}
 \usepackage{setspace}
 \usepackage{subcaption}
@@ -92,10 +94,13 @@
     \input{fft}
     \input{intfft}
     \input{impl}
+    \input{eval}
     % use bibtex for references
+    \newpage
     \bibliographystyle{plain}
     \bibliography{refs}
 
+    \newpage
     \appendix
     \input{appendix}
 \end{document}
