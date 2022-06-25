@@ -1,4 +1,5 @@
-# reference implementations of DFT, a simple FFT, and in-place FFT
+# Reference implementations of naive DFT, a simple FFT, and in-place fixed-point FFT
+# Plotting functions for showing results of reference and Janus FFT
 import math
 from matplotlib import pyplot as plt
 
@@ -23,9 +24,11 @@ def plot2D(arr):
     plt.plot(x, y)
     plt.show()
 
+# Twiddle factors for N = 256
 twiddle_m = [0,-805,-1609,-2414,-3220,-4027,-4835,-5644,-6455,-7268,-8084,-8901,-9722,-10545,-11372,-12202,-13036,-13875,-14717,-15564,-16416,-17274,-18137,-19006,-19881,-20762,-21651,-22546,-23450,-24361,-25281,-26209,-27146,-28093,-29051,-30018,-30997,-31987,-32989,-34003,-35030,-36071,-37126,-38196,-39281,-40383,-41501,-42636,-43790,-44963,-46156,-47370,-48605,-49863,-51145,-52452,-53785,-55144,-56532,-57950,-59399,-60880,-62396,-63947]
 twiddle_i = [0,1608,3215,4821,6423,8022,9616,11204,12785,14359,15923,17479,19024,20557,22078,23586,25079,26557,28020,29465,30893,32302,33692,35061,36409,37736,39039,40319,41575,42806,44011,45189,46340,47464,48558,49624,50660,51665,52639,53581,54491,55368,56212,57022,57797,58538,59243,59913,60547,61144,61705,62228,62714,63162,63571,63943,64276,64571,64826,65043,65220,65358,65457,65516]
 
+# Rotation using lifting scheme
 def rotate_lifting(x, k, k_step):
     m = twiddle_m[k * k_step]
     i = twiddle_i[k * k_step]
@@ -44,6 +47,7 @@ def rotate_lifting_backward(x, k, k_step):
     xr -= (m * xi) >> 16
     return (xr, xi)
 
+# Rotation using complex multiplication
 def rotate(x, angle):
     s = math.sin(angle)
     c = math.cos(angle)
@@ -97,6 +101,7 @@ def scramble(signal):
     odds = scramble(odds)
     return evens + odds
 
+# Rotation step
 def fft_rotate(signal, N):
     halfN = N // 2
     quarterN = halfN // 2
@@ -106,11 +111,11 @@ def fft_rotate(signal, N):
             offset = halfN + section * N
             for k in range(1, quarterN): # set to halfN for naive
                 odd_idx = k + offset
-                dual_idx = halfN - k + offset
-                signal[odd_idx] = rotate_lifting(signal[odd_idx], k, num_sections)
-                # rotation without using lifting steps
+                # Uncomment for rotation using complex multiplication
                 #signal[odd_idx] = rotate(signal[odd_idx], 2 * math.pi * k/N)
                 #tmp = rotate(signal[dual_idx], -2 * math.pi * k/N)
+                dual_idx = halfN - k + offset
+                signal[odd_idx] = rotate_lifting(signal[odd_idx], k, num_sections)
                 tmp = rotate_lifting_backward(signal[dual_idx], k, num_sections)
                 signal[dual_idx] = (-tmp[0], -tmp[1])
             quarter_idx = offset + quarterN
@@ -118,6 +123,7 @@ def fft_rotate(signal, N):
             signal[quarter_idx] = (-tmp[1], tmp[0])
     return signal
 
+# Convolution step
 def fft_convolve(signal, N):
     halfN = N // 2
     for section in range(len(signal) // N):
@@ -129,6 +135,7 @@ def fft_convolve(signal, N):
             signal[even_idx] = add(signal[even_idx], o)
     return signal
 
+# In-place fixed-point FFT
 def fft_inplace(signal):
     signal = scramble(signal)
     #plot3D(signal, "Scrambled")
