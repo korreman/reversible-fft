@@ -145,7 +145,7 @@ def gen_sine(freq, len):
     return [math.floor(2**16 * math.sin(1/freq * 2 * math.pi * x)) for x in range(len)]
 
 signal = [(x + y, 0) for x, y in zip(gen_sine(3, 256), gen_sine(7, 256))]
-#print("signal:", [x for (x, y) in signal])
+print("signal:", [x for (x, y) in signal])
 #plot3D(signal, "Initial")
 result = fft_inplace(signal)
 plot2D(result)
