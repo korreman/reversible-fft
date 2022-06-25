@@ -1,7 +1,7 @@
-\section{Fast Fourier Transform}
+\section{Fast Fourier Transform\label{sec:fft}}
 The DFT is not a hard sum to calculate,
 but naively computing it for $k \in [0;N)$ will take $O(N^2)$ time.
-By exploiting certain redundancies in the formula,
+By exploiting certain redundancies,
 we can recursively factorize the sum in such a way that it can be computed in $O(N \log N)$ time.
 An algorithm that takes advantage of such factorizations is called a Fast Fourier Transform (FFT).
 
@@ -101,7 +101,7 @@ The last step
 \begin{itemize}
     \item halves the number of multiplications,
     \item allows us to trivially compute the FFT in-place,
-    \item and performs the FFT in such a way that it can be directly inverted.
+    \item and defines the FFT in such a way that it can be directly inverted.
 \end{itemize}
 
 From the symmetry property of the twiddle factor, we get $W_N^k = -W_N^{k - N/2} = -W_N^{k'}$.
@@ -116,7 +116,7 @@ This gives us the final factorization:
     \end{cases}
 \end{equation}
 This factorization can be recursively applied
-until we have divided our input into pieces of size 1 each.
+until we have divided our input into pieces of size 1.
 Conveniently, the DFT of $\langle v \rangle$ is simply $\langle v \rangle$,
 so this makes for a simple base case.
 

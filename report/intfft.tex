@@ -1,4 +1,4 @@
-\section{Reversible implementation}
+\section{Reversible FFT}
 As mentioned in section \ref{sec:fourier},
 both FT and DFT are invertible sums.
 The definition of IDFT also permits a factorization that is essentially equivalent to that of DFT.
@@ -7,11 +7,33 @@ There are some challenges that must be overcome in order to do this.
 The primary challenges are detailed in \cite{intfft},
 which presents some solutions to these.
 
+\subsection{In-place computation}
+The FFT algorithm described in section \ref{sec:fft} can be performed in-place with a single array.
+
+Rather than create new arrays for evens and odds,
+we can rearrange the evens and odds into the upper and lower half of the array respectively,
+then recurse on these halfs.
+
+Taking it further, rather than rearranging the array at every recursion level,
+we can perform one equivalent rearrangement of the array.
+This is usually referred to as a scrambling of the array.
+In order to get an equivalent rearrangement,
+we swap the element at each index with the index obtained from reversing its bit string.
+
+After scrambling,
+we have $N/2$ pairs of even and odd base cases placed next to each other.
+These pairs can be combined, giving us $N/4$ pairs of size 2 FFT solutions.
+We then combine these pairs into $N/8$ solutions,
+and repeat until we have obtained an FFT for the full array.
+Figure \ref{fig:lattice} shows this strategy in action for an array of size 8.
+
+\input{lattice.tex}
+
 \subsection{Fixpoint arithmetic}
 The first problem is that we must find a way to represent complex numbers.
 Complex numbers are generally represented by $a, b \in \mathbb{R}$ such that $n = a + bi$.
-You might normally choose to use floating point numbers to represent $a$ and $b$,
-but updates to these are inherently destructive once.
+You might wish to use floating point numbers to represent $a$ and $b$,
+but updates to these are destructive.
 
 Instead, we use a fix-point representation.
 We represent real numbers by $r = x \cdot 2^{-p},~~ x, p \in \mathbb{Z}$.
@@ -28,212 +50,95 @@ When not updating in-place,
 we can round off the lower bits of multiplication-results to keep the fix-point in place.
 
 \subsection{Lifting steps}
-\begin{figure}
-    \centering
-    \begin{subfigure}[b]{0.45\textwidth}
-        \begin{tikzpicture}[
-                dot/.style = {circle, fill, inner sep = 0mm, minimum size = 2.5mm},
-                op/.style = {draw, thick, circle, inner sep = 0mm, minimum size = 5mm},
-                func/.style = {draw, thick, circle, inner sep = 1mm},
-                arr/.style = {draw, thick, ->},
-            ]
-            \node (A) at (0, 3) [dot, label = left:A] {};
-            \node (B) at (0, 0) [dot, label = left:B] {};
-            \node (C) at (6, 3) [dot, label = right:C] {};
-            \node (D) at (6, 0) [dot, label = right:D] {};
+Central operations of our FFT algorithm
+must update two variables at once in a butterfly-like structure.
+That is to say, each value must be updated in a way that is dependent on both itself and the other,
+creating a datapath that looks like a ``butterfly''.
+Mutually dependent simultaneous updates are a problem for reversability,
+as we cannot recover the original values.
+Our specific updates \textit{can} be reversed, at least mathematically.
 
-            \node (P1) at (2, 3) [op] {\textbf{+}};
-            \node (P2) at (4, 0) [op] {\textbf{+}};
+In order to make them practically reversible in a reversible language,
+we can convert them into a series of \textit{lifting steps}.
+This method is described in detail in \cite{lifting1998},
+although we use the method somewhat differently.
+Figure \ref{fig:lift} shows the concept as a datapath.
 
-            \node (F) at (2, 1.5) [func] {F};
-            \node (G) at (4, 1.5) [func] {G};
+Say you have two variables $A$ and $B$.
+Instead of performing simultaneous updates,
+we can run $B$ through some function $F$ and add it to $A$.
+Next, we can run $A$ through another function $G$ and add it back to $B$.
+Since the value added at each step can still be derived after the step,
+we can reverse the operation by deriving and subtracting the same values in the opposite order.
 
-            \path[arr] (A) -- (P1);
-            \path[arr] (P1) -- (C);
-            \path[arr] (B) -- (P2);
-            \path[arr] (P2) -- (D);
-            \path[arr] (2, 0) -- (F);
-            \path[arr] (F) -- (P1);
-            \path[arr] (4, 3) -- (G);
-            \path[arr] (G) -- (P2);
-        \end{tikzpicture}
-        \caption{Lifting steps.}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.5\textwidth}
-        \begin{tikzpicture}[
-                dot/.style = {circle, fill, inner sep = 0mm, minimum size = 2.5mm},
-                op/.style = {draw, thick, circle, inner sep = 0mm, minimum size = 5mm},
-                func/.style = {draw, thick, circle, inner sep = 1mm},
-                arr/.style = {draw, thick, ->},
-            ]
-            \node (A) at (14, 3) [dot, label = right:A] {};
-            \node (B) at (14, 0) [dot, label = right:B] {};
-            \node (C) at (8, 3) [dot, label = left:C] {};
-            \node (D) at (8, 0) [dot, label = left:D] {};
+If we can represent a butterfly update as a lifting scheme, we can invert it.
+The method also has another benefit;
+the functions applied to values before they are added to the variables do not have to be reversible.
+Our functions will be multiplications,
+which would force a great increase in bit-depth for every multiplication.
+We can avoid this by quantizing (rounding) the values down before adding them,
+preserving the original fixpoint throughout applying the lifting scheme.
 
-            \node (P1) at (12, 3) [op] {\textbf{-}};
-            \node (P2) at (10, 0) [op] {\textbf{-}};
-
-            \node (F) at (12, 1.5) [func] {F};
-            \node (G) at (10, 1.5) [func] {G};
-
-            \path[arr] (P1) -- (A);
-            \path[arr] (C) -- (P1);
-            \path[arr] (P2) -- (B);
-            \path[arr] (D) -- (P2);
-
-            \path[arr] (12, 0) -- (F);
-            \path[arr] (10, 3) -- (G);
-            \path[arr] (F) -- (P1);
-            \path[arr] (G) -- (P2);
-        \end{tikzpicture}
-        \caption{Inverse path.}
-    \end{subfigure}
-    \caption{Dataflow path of a lifting step and its derived inverse.\label{fig:lift}}
-\end{figure}
+\input{lifting_diagram}
 
 \subsection{Complex multiplication}
-\begin{figure}
-    \begin{subfigure}[b]{0.5\textwidth}
-        \begin{tikzpicture}[
-                dot/.style = {circle, fill, inner sep = 0mm, minimum size = 2.5mm},
-                op/.style = {draw, thick, circle, inner sep = 0mm, minimum size = 5mm},
-                func/.style = {draw, thick, circle, inner sep = 1mm},
-                arr/.style = {draw, thick, ->},
-            ]
-            \node (XR) [dot, label=left:$x_r$] at (0,3){};
-            \node (XI) [dot, label=left:$x_i$] at (0,0){};
-            \node (AXR) [dot, label=right:$(ax)_r$] at (5.5,3){};
-            \node (AXI) [dot, label=right:$(ax)_i$] at (5.5,0){};
+As a reminder, the formula for complex multiplication is given by:
+\begin{equation}
+    ax = (a_r + a_i \cdot i)(x_r + x_i \cdot i) = a_rx_r - a_ix_i + (a_r x_i + a_ix_r)i
+\end{equation}
+If we treat complex numbers as vectors, we can represent this as a matrix multiplication:
+\begin{equation}
+    ax =
+    \begin{bmatrix}
+        a_r &-a_i\\
+        a_i &a_r
+    \end{bmatrix}
+    \begin{bmatrix}
+        x_r\\
+        x_i
+    \end{bmatrix}
+\end{equation}
+It should be clear that an in-place multiplication of $x$ with $a$ requires a simultaneous update.
+Figure \ref{fig:complexmula} shows the butterfly datapath for this update.
+In our case, we wish to multiply our values by a pre-known coefficient $a = W_N^k$.
+We also know this value to be of unit length, meaning that $\sqrt{a_r^2 + a_i^2} = 1$.
+Utilizing this equivalence, we can factorize the matrix as follows:
+\begin{equation}
+    ax =
+    \begin{bmatrix}
+        1 &\frac{c-1}{s}\\
+        0 &1
+    \end{bmatrix}
+    \begin{bmatrix}
+        1 &0\\
+        s &1
+    \end{bmatrix}
+    \begin{bmatrix}
+        1 &\frac{c - 1}{s}\\
+        0 &1
+    \end{bmatrix}
+    \begin{bmatrix}
+        x_r\\
+        x_i
+    \end{bmatrix}
+\end{equation}
+These multiplications can be performed by the lifting steps shown in figure \ref{fig:complexmulb}.
+Figure \ref{fig:complexmulc} shows the lifting scheme with added quantization steps.
+As for how to obtain these coefficients,
+we can pre-compute them and add them to the program as a lookup table.
+It is only necessary to compute the coefficients for $W_N^k,~k \in (0;N/4)$, as:
+\begin{itemize}
+    \item $W_N^0 x$ and $W_N^{N/4} x$ can be trivially computed without coefficients.
+    \item $W_N^k x$ for $k \in (N/4; N/2)$
+        can be computed by flipping the real component of $W_N^{N/2 - k}$.
+    \item $W_N^k$ for $k \in [N/2;N)$ is never used.
+    \item $W_{N/2^L}^k x$ can be obtained from $W_N^{2^L k} x$.
+\end{itemize}
 
-            \node (P1) [op] at (4.5, 3) {+};
-            \node (P2) [op] at (4.5, 0) {+};
-            \node (AR1) [func] at (3.0, 3) {$a_r$};
-            \node (AR2) [func] at (3.0, 0) {$a_r$};
-
-            \node (AI1) [func] at (1.5, 2) {$a_i$};
-            \node (AI2) [op] at (1.5, 1) {$-a_i$};
-
-            \path[arr] (XR) -- (AR1);
-            \path[arr] (AR1) -- (P1);
-            \path[arr] (P1) -- (AXR);
-
-            \path[arr] (XI) -- (AR2);
-            \path[arr] (AR2) -- (P2);
-            \path[arr] (P2) -- (AXI);
-
-            \path[arr] (XR) -- (AI1);
-            \path[arr] (AI1) -- (P2);
-
-            \path[arr] (XI) -- (AI2);
-            \path[arr] (AI2) -- (P1);
-        \end{tikzpicture}
-        \caption{Butterfly structure.\label{fig:complexmula}}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.5\textwidth}
-        \begin{tikzpicture}[
-                dot/.style = {circle, fill, inner sep = 0mm, minimum size = 2.5mm},
-                op/.style = {draw, thick, circle, inner sep = 0mm, minimum size = 5mm},
-                func/.style = {draw, thick, circle, inner sep = 1mm},
-                arr/.style = {draw, thick, ->},
-            ]
-            \node (xr) [dot, label=left:$x_r$] at (0,3){};
-            \node (xi) [dot, label=left:$x_i$] at (0,0){};
-            \node (axr) [dot, label=right:$(ax)_r$] at (6,3){};
-            \node (axi) [dot, label=right:$(ax)_i$] at (6,0){};
-
-            \node (one) [op] at (1.5, 1.5) {$\frac{a_r - 1}{a_i}$};
-            \node (two) [op] at (3, 1.5) {$a_i$};
-            \node (three) [op] at (4.5, 1.5) {$\frac{a_r - 1}{a_i}$};
-
-            \node (p1) [op] at (1.5, 3){+};
-            \node (p2) [op] at (3, 0){+};
-            \node (p3) [op] at (4.5, 3){+};
-
-            \path[arr] (xr) -- (p1);
-            \path[arr] (p1) -- (p3);
-            \path[arr] (p3) -- (axr);
-
-            \path[arr] (xi) -- (p2);
-            \path[arr] (p2) -- (axi);
-
-            \path[arr] (1.5, 0) -- (one);
-            \path[arr] (one) -- (p1);
-
-            \path[arr] (3, 3) -- (two);
-            \path[arr] (two) -- (p2);
-
-            \path[arr] (4.5, 0) -- (three);
-            \path[arr] (three) -- (p3);
-        \end{tikzpicture}
-        \caption{Alternative lifting steps.\label{fig:complexmulb}}
-    \end{subfigure}
-    \caption{Datapaths for complex multiplication.\label{fig:complexmul}}
-\end{figure}
+\input{complexmul}
 
 \subsection{Reversible convolution}
-\begin{figure}
-    \centering
-    \begin{subfigure}[b]{0.496\textwidth}
-        \begin{tikzpicture}[
-                dot/.style = {circle, fill, inner sep = 0mm, minimum size = 2.5mm},
-                op/.style = {draw, thick, circle, inner sep = 0mm, minimum size = 5mm},
-                func/.style = {draw, thick, circle, inner sep = 1mm},
-                arr/.style = {draw, thick, ->},
-            ]
-            \node (x) [dot, label=left:$x$] at (0,2){};
-            \node (y) [dot, label=left:$y$] at (0,0){};
-            \node (xp) [dot, label=right:$x'$] at (5,2){};
-            \node (yp) [dot, label=right:$y'$] at (5,0){};
-
-            \node (a1) [op] at (2.75, 1.375) {a};
-            \node (a2) [op] at (2, 0) {-a};
-            \node (p1) [op] at (4, 2) {+};
-            \node (p2) [op] at (4, 0) {+};
-
-            \path[arr] (x) -- (p1);
-            \path[arr] (p1) -- (xp);
-            \path[arr] (y) -- (a2);
-            \path[arr] (a2) -- (p2);
-            \path[arr] (p2) -- (yp);
-
-            \path[arr] (x) -- (p2);
-
-            \path[arr] (y) -- (a1);
-            \path[arr] (a1) -- (p1);
-        \end{tikzpicture}
-        \caption{Butterfly structure.\label{fig:conva}}
-    \end{subfigure}
-    \begin{subfigure}[b]{0.496\textwidth}
-        \begin{tikzpicture}[
-                dot/.style = {circle, fill, inner sep = 0mm, minimum size = 2.5mm},
-                op/.style = {draw, thick, circle, inner sep = 0mm, minimum size = 5mm},
-                func/.style = {draw, thick, circle, inner sep = 1mm},
-                arr/.style = {draw, thick, ->},
-            ]
-            \node (x) [dot, label=left:$x$] at (0,2){};
-            \node (y) [dot, label=left:$y$] at (0,0){};
-            \node (yp) [dot, label=right:$y'$] at (4.8,2){};
-            \node (xp) [dot, label=right:$x'$] at (4.8,0){};
-
-            \node (a) [op] at (1.2,0){a};
-            \node (t) [op] at (2.4,0){2};
-            \node (m) [op] at (1.2,2){-};
-            \node (p) [op] at (3.6,0){+};
-
-            \path[arr] (x) -- (m);
-            \path[arr] (m) -- (yp);
-            \path[arr] (y) -- (a);
-            \path[arr] (a) -- (m);
-            \path[arr] (a) -- (t);
-            \path[arr] (t) -- (p);
-            \path[arr] (p) -- (xp);
-            \path[arr] (3.6,2) -- (p);
-        \end{tikzpicture}
-        \caption{Alternative lifting steps.\label{fig:convb}}
-    \end{subfigure}
-    \caption{Datapaths for FFT convolution.\label{fig:conv}}
-\end{figure}
+\input{convolution}
 
 \begin{lstlisting}
 procedure mul2

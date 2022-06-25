@@ -7,45 +7,45 @@ Warning--entry type for "3blue" isn't style-file defined
 --line 32 of file refs.bib
 Warning--entry type for "brunton" isn't style-file defined
 --line 40 of file refs.bib
-You've used 4 entries,
+You've used 5 entries,
             2118 wiz_defined-function locations,
-            524 strings with 4672 characters,
-and the built_in function-call counts, 1277 in all, are:
-= -- 130
-> -- 45
+            530 strings with 4820 characters,
+and the built_in function-call counts, 1595 in all, are:
+= -- 162
+> -- 58
 < -- 1
-+ -- 19
-- -- 14
-* -- 63
-:= -- 199
-add.period$ -- 13
-call.type$ -- 4
-change.case$ -- 19
++ -- 24
+- -- 18
+* -- 85
+:= -- 253
+add.period$ -- 16
+call.type$ -- 5
+change.case$ -- 24
 chr.to.int$ -- 0
-cite$ -- 4
-duplicate$ -- 58
-empty$ -- 108
-format.name$ -- 14
-if$ -- 288
+cite$ -- 5
+duplicate$ -- 69
+empty$ -- 134
+format.name$ -- 18
+if$ -- 355
 int.to.chr$ -- 0
-int.to.str$ -- 4
-missing$ -- 2
-newline$ -- 23
-num.names$ -- 8
-pop$ -- 28
+int.to.str$ -- 5
+missing$ -- 3
+newline$ -- 28
+num.names$ -- 10
+pop$ -- 31
 preamble$ -- 1
-purify$ -- 15
+purify$ -- 19
 quote$ -- 0
-skip$ -- 55
+skip$ -- 63
 stack$ -- 0
-substring$ -- 60
-swap$ -- 23
+substring$ -- 86
+swap$ -- 24
 text.length$ -- 1
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 16
+type$ -- 20
 warning$ -- 0
-while$ -- 10
-width$ -- 5
-write$ -- 47
+while$ -- 13
+width$ -- 6
+write$ -- 58
 (There were 2 warnings)

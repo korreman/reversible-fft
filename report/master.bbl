@@ -5,6 +5,12 @@ Steve Brunton.
 \newblock {The Fast Fourier Transform Algorithm}, 2020.
 \newblock \url{https://www.youtube.com/watch?v=toj_IoCQE-4}.
 
+\bibitem{lifting1998}
+Ingrid Daubechies and Wim Sweldens.
+\newblock Factoring wavelet transforms into lifting steps.
+\newblock {\em Journal of Fourier Analaysis and Applications}, 4:247--269,
+  1998.
+
 \bibitem{intfft}
 S.~Oraintara, Y.J. Chen, and T.Q. Nguyen.
 \newblock Integer fast fourier transform.
