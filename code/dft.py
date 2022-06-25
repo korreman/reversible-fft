@@ -1,4 +1,4 @@
-# naive reference implementation of DFT for comparison with janus FFT
+# reference implementations of DFT, a simple FFT, and in-place FFT
 import math
 from matplotlib import pyplot as plt
 
@@ -129,7 +129,7 @@ def fft_convolve(signal, N):
             signal[even_idx] = add(signal[even_idx], o)
     return signal
 
-def fft_layered(signal):
+def fft_inplace(signal):
     signal = scramble(signal)
     #plot3D(signal, "Scrambled")
     N = 2
@@ -147,5 +147,5 @@ def gen_sine(freq, len):
 signal = [(x + y, 0) for x, y in zip(gen_sine(3, 256), gen_sine(7, 256))]
 #print("signal:", [x for (x, y) in signal])
 #plot3D(signal, "Initial")
-result = fft_layered(signal)
+result = fft_inplace(signal)
 plot2D(result)
